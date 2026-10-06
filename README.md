@@ -21,6 +21,15 @@ The initial data preparation includes:
 - Removal of duplicate conversations
 - Conversation-level train / validation / test splitting
 - Dataset statistics and language-pair analysis
+- The processed train, validation, and test datasets are stored separately
+because of their file sizes.
+
+Files:
+- `train.parquet`
+- `validation.parquet`
+- `test.parquet`
+
+Dataset folder: [Processed SwitchLingua Data](https://drive.google.com/drive/folders/1W4y0YEtRhuCIa31Y591JgslPQya9AR5o?usp=sharing)
 
 ## Repository Structure
 
