@@ -1,0 +1,16 @@
+language_pair,original_count,retained_after_cleaning,total_removed,final_count
+Arabic-English,8548,8548,4,8544
+Cantonese-English,119248,119157,1045,118203
+Chinese-English,8458,8458,1,8457
+French-English,8070,8070,3,8067
+German-English,6819,6819,5,6814
+German-French,8511,8511,3,8508
+Hindi-English,8381,8381,0,8381
+Italian-English,7979,7979,1,7978
+Japanese-English,8385,8385,0,8385
+Korean-English,8266,8266,0,8266
+Malay-English,8386,8386,0,8386
+Philippines-English,8537,8537,0,8537
+Russian-English,8017,8017,0,8017
+Spanish-English,8110,8110,9,8101
+Vietnamese-English,8457,8457,1,8456

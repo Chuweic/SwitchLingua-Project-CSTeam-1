@@ -1,0 +1,16 @@
+language_pair,train,validation,test,total
+Arabic-English,6835,855,854,8544
+Cantonese-English,94562,11821,11820,118203
+Chinese-English,6765,846,846,8457
+French-English,6454,807,806,8067
+German-English,5451,682,681,6814
+German-French,6806,851,851,8508
+Hindi-English,6705,838,838,8381
+Italian-English,6382,798,798,7978
+Japanese-English,6708,838,839,8385
+Korean-English,6613,826,827,8266
+Malay-English,6709,838,839,8386
+Philippines-English,6830,854,853,8537
+Russian-English,6414,801,802,8017
+Spanish-English,6481,810,810,8101
+Vietnamese-English,6765,845,846,8456
