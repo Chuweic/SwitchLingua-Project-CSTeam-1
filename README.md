@@ -102,3 +102,38 @@ Run the Member B tests from the repository root with:
 ```bash
 PYTHONPATH=. pytest -q
 ```
+
+## Member C: Streaming DataLoader and Causal Constraint
+
+`src/streaming_dataloader.py` consumes Member B's `encode_and_label` output
+(optionally with a `language_pair` field) and builds right-padded batches:
+
+```python
+from src.streaming_dataloader import create_streaming_dataloader
+
+train_loader = create_streaming_dataloader(train_records, batch_size=32, shuffle=True)
+val_loader = create_streaming_dataloader(
+    val_records, batch_size=32, lid_vocab=train_loader.dataset.lid_vocab
+)
+```
+
+Each batch contains `input_ids`, `attention_mask`, `current_lid`,
+`switch_labels`, `duration_labels`, `language_pair`, and `causal_mask`
+(`[batch, 1, L, L]`, boolean, `True` = may attend). Query `t` can only attend
+to real tokens at positions `0..t`; `to_additive_mask` converts it to
+0 / large-negative attention scores. Padding positions use `-100` for all
+label and LID fields; `duration_labels` keeps `-1` for valid non-switch
+positions. `current_lid[t]` is the language of the current sub-word only and
+never exposes `t+1`.
+
+Training feeds full sequences with `causal_mask`, which is equivalent to
+prefix-only inputs. `iter_prefix_windows` materialises explicit
+`(x_0..x_t) -> labels[t]` samples for streaming evaluation and demos.
+`tests/test_streaming_dataloader.py` includes a future-leakage test that
+replaces every token after `t` and checks that model outputs at `<= t` are
+unchanged, plus a negative control showing the check fails without the causal
+mask. Example output:
+
+```bash
+PYTHONPATH=. python examples/member_c_dataloader_example.py
+```
