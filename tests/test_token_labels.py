@@ -97,3 +97,16 @@ def test_special_padding_and_last_position_are_ignored():
 def test_mismatched_words_and_language_ids_raise_value_error():
     with pytest.raises(ValueError, match="same length"):
         encode_and_label_impl(FakeTokenizer(), ["hello"], ["en", "zh"])
+
+
+def test_real_text_tokenizer_splits_script_changes_and_arabic_punctuation():
+    assert switchlingua_labels.tokenize_mixed_text("研究team真係好!") == ["研究", "team", "真係好", "!"]
+    assert switchlingua_labels.tokenize_mixed_text("الاصطناعي، خاصة") == ["الاصطناعي", "،", "خاصة"]
+
+
+def test_pair_restricted_lid_handles_script_distinct_text():
+    words, lids = switchlingua_labels.PairRestrictedWordLID().annotate(
+        "أنا like this.", "Arabic", "English"
+    )
+    assert words == ["أنا", "like", "this", "."]
+    assert lids == ["ar", "en", "en", "en"]
