@@ -11,8 +11,11 @@ from src.streaming_dataloader import (
     collate_streaming_batch,
     create_streaming_dataloader,
     iter_prefix_windows,
+    make_split_loaders,
+    multitask_cross_entropy,
     to_additive_mask,
 )
+from src.naive_baseline import CurrentTokenBaseline, evaluate_by_pair
 
 
 class FakeEncoding(dict):
@@ -218,3 +221,38 @@ def test_collated_inputs_at_t_do_not_depend_on_future_words():
 
     for field in ("input_ids", "attention_mask", "current_lid"):
         assert torch.equal(base_item[field][: t + 1], changed_item[field][: t + 1])
+
+
+def test_split_loaders_reuse_training_lid_vocab(records):
+    train, validation, test = make_split_loaders(records, records, records, batch_size=2)
+    assert validation.dataset.lid_vocab == train.dataset.lid_vocab
+    assert test.dataset.lid_vocab == train.dataset.lid_vocab
+
+
+def test_multitask_loss_masks_duration_minus_one_and_minus_100():
+    switch_logits = torch.zeros(1, 4, 2, requires_grad=True)
+    duration_logits = torch.zeros(1, 4, 3, requires_grad=True)
+    result = multitask_cross_entropy(
+        switch_logits,
+        duration_logits,
+        switch_labels=torch.tensor([[0, 1, -100, -100]]),
+        duration_labels=torch.tensor([[-1, 2, -100, -100]]),
+    )
+    assert result["switch_count"].item() == 2
+    assert result["duration_count"].item() == 1
+    result["loss"].backward()
+
+
+def test_current_token_baseline_ignores_invalid_labels():
+    train = [{
+        "input_ids": [10, 11, 0],
+        "switch_labels": [1, 0, -100],
+        "duration_labels": [2, -1, -100],
+        "language_pair": "Arabic-English",
+    }]
+    model = CurrentTokenBaseline().fit(train)
+    result = evaluate_by_pair(model, train)
+    assert sum(model.global_counts.values()) == 2
+    assert sum(model.global_durations.values()) == 1
+    assert result["overall"]["support"] == 2
+    assert result["overall"]["duration_support"] == 1

@@ -10,6 +10,7 @@ position ``t`` may attend to positions ``0..t`` and never to ``t+1`` or later.
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence
 
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
 from src.switchlingua_labels import IGNORE_INDEX
@@ -199,3 +200,60 @@ def iter_prefix_windows(record: Mapping[str, Any], include_ignored: bool = False
 
 def records_to_prefix_windows(records: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
     return [window for record in records for window in iter_prefix_windows(record)]
+
+
+def make_split_loaders(
+    train_records: Sequence[Mapping[str, Any]],
+    validation_records: Sequence[Mapping[str, Any]],
+    test_records: Sequence[Mapping[str, Any]],
+    **loader_kwargs: Any,
+):
+    """Build all splits while forcing validation/test to reuse train LIDs."""
+
+    loader_kwargs = dict(loader_kwargs)
+    loader_kwargs.pop("shuffle", None)
+    train_loader = create_streaming_dataloader(train_records, shuffle=True, **loader_kwargs)
+    lid_vocab = train_loader.dataset.lid_vocab
+    validation_loader = create_streaming_dataloader(
+        validation_records, lid_vocab=lid_vocab, shuffle=False, **loader_kwargs
+    )
+    test_loader = create_streaming_dataloader(
+        test_records, lid_vocab=lid_vocab, shuffle=False, **loader_kwargs
+    )
+    return train_loader, validation_loader, test_loader
+
+
+def multitask_cross_entropy(
+    switch_logits: torch.Tensor,
+    duration_logits: torch.Tensor,
+    switch_labels: torch.Tensor,
+    duration_labels: torch.Tensor,
+    *,
+    switch_weight: float = 1.0,
+    duration_weight: float = 1.0,
+) -> Dict[str, torch.Tensor]:
+    """Mask switch ``-100`` and both duration sentinels (``-1``, ``-100``)."""
+
+    if switch_logits.shape[:-1] != switch_labels.shape:
+        raise ValueError("switch logits/labels shapes do not align")
+    if duration_logits.shape[:-1] != duration_labels.shape:
+        raise ValueError("duration logits/labels shapes do not align")
+    switch_valid = switch_labels.ne(IGNORE_INDEX)
+    duration_valid = duration_labels.ge(0)
+    switch_loss = (
+        F.cross_entropy(switch_logits[switch_valid], switch_labels[switch_valid])
+        if switch_valid.any()
+        else switch_logits.sum() * 0.0
+    )
+    duration_loss = (
+        F.cross_entropy(duration_logits[duration_valid], duration_labels[duration_valid])
+        if duration_valid.any()
+        else duration_logits.sum() * 0.0
+    )
+    return {
+        "loss": switch_weight * switch_loss + duration_weight * duration_loss,
+        "switch_loss": switch_loss,
+        "duration_loss": duration_loss,
+        "switch_count": switch_valid.sum(),
+        "duration_count": duration_valid.sum(),
+    }
