@@ -1,139 +1,216 @@
 # SwitchLingua Project - CS Team 1
 
-This repository contains our course project on **predictive multitask learning for streaming code-switching** using the SwitchLingua dataset.
+This repository contains our course project on **predictive multitask learning for streaming code-switching** using the SwitchLingua dataset. Using only the prefix through token `t`, the system predicts whether token `t+1` switches language and the duration of the upcoming language segment.
 
 ## Project Goals
 
 The project focuses on:
 
-- Predicting whether the next token will switch languages
-- Predicting the duration of the upcoming switched-language segment
-- Evaluating performance across multiple language pairs
-- Comparing multilingual modeling approaches under causal, prefix-only constraints
+- Predicting the next-token language switch and upcoming segment duration
+- Building a Streaming DataLoader with aligned token, LID, and predictive labels
+- Enforcing causal, prefix-only context without future-token leakage
+- Evaluating Anticipatory F1 and consistency across diverse language pairs
+- Comparing multilingual models, beginning with a current-token-only baseline
 
-## Update 1 
-### Step 1: Data Preparation
+## Project Update 1
 
-The initial data preparation includes:
+Update 1 covers:
 
-- Exploration of the SwitchLingua dataset
-- Parsing and normalization of conversation records
-- Removal of duplicate conversations
-- Conversation-level train / validation / test splitting
-- Dataset statistics and language-pair analysis
-- The processed train, validation, and test datasets are stored separately
-because of their file sizes.
+- selection of typologically diverse language pairs;
+- real-data ingestion and streaming batch construction;
+- word-to-subword Language ID (LID) alignment;
+- next-token switch and duration labels;
+- causal, prefix-only attention;
+- a current-token-only naive baseline; and
+- initial Anticipatory F1 and universality results.
 
-Files:
-- `train.parquet`
-- `validation.parquet`
-- `test.parquet`
+The current test suite contains 21 tests covering label alignment, padding, duration masking, shared LID vocabulary, causal masking, and future leakage.
 
-Dataset folder: [Processed SwitchLingua Data](https://drive.google.com/drive/folders/1W4y0YEtRhuCIa31Y591JgslPQya9AR5o?usp=sharing)
+## Setup
 
-## Repository Structure
+Create and activate a virtual environment, install the dependencies, and run the tests from the repository root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+PYTHONPATH=. pytest -q
+```
+
+Expected test result:
 
 ```text
-SwitchLingua-Project-CSTeam-1/
-├── notebooks/
-│   └── update_1.ipynb
-├── data/
-│   └── processed/
-│       ├── cleaning_summary.csv
-│       ├── split_summary.csv
-│       └── language_pair_distribution.csv
-├── README.md
-└── .gitignore
+21 passed
 ```
 
 ## Dataset
 
-The project uses the **SwitchLingua** dataset from Hugging Face:
+The project uses the Hugging Face dataset `Shelton1013/SwitchLingua_text`. The data was parsed, normalized, deduplicated, and split at the original conversation level using a stratified 80/10/10 train/validation/test split.
 
-`Shelton1013/SwitchLingua_text`
+The processed parquet files are stored outside GitHub because of their size. Download them from the team’s [Processed SwitchLingua Data folder](https://drive.google.com/drive/folders/1W4y0YEtRhuCIa31Y591JgslPQya9AR5o?usp=sharing) and place them as follows:
 
-The dataset contains multilingual code-switching conversations across 15 language pairs.
-
-## Data Splitting
-
-The cleaned dataset is split into:
-
-- 80% training
-- 10% validation
-- 10% test
-
-Splitting is performed at the original conversation level and stratified by language pair so that utterances from the same conversation do not appear in different data splits.
-
-## Team
-
-**CS Team 1**
-
-## Member B: Tokenization and Predictive Labels
-
-The Member B preprocessing module is available at
-`src/switchlingua_labels.py`. It accepts pre-tokenized words and one language
-ID per word, then calls a Hugging Face-style fast tokenizer with
-`is_split_into_words=True`. Each sub-word inherits the language ID of its
-source word through `word_ids()`, so splitting a word does not create a false
-language switch.
-
-```python
-from src.switchlingua_labels import encode_and_label
-
-result = encode_and_label(tokenizer, words, word_language_ids)
+```text
+data/processed/
+├── train.parquet
+├── validation.parquet
+└── test.parquet
 ```
 
-For every valid sub-word at position `t`, `switch_labels[t]` predicts whether
-the next valid sub-word changes language. `duration_labels[t]` is supervised
-only at an anticipated switch: class `0` means 1–2 upcoming sub-word tokens,
-class `1` means 3–6, and class `2` means 7 or more. Valid non-switch positions
-use `-1`; special tokens, padding, and the final position without a next-token
-target use `-100` (`IGNORE_INDEX`).
+These parquet files are excluded by `.gitignore` and should not be committed.
 
-The raw SwitchLingua export contains utterance text and conversation-level
-language-pair metadata, but not token-level language ID annotations. A
-language-identification/alignment preprocessing step must therefore provide
-`word_language_ids` before this module is called. The complete deterministic
-Arabic–English conversion example is in
-`examples/member_b_label_example.py`.
+## Language Pairs and Universality Rationale
 
-Run the Member B tests from the repository root with:
+The initial experiment uses four complementary pairs:
 
-```bash
-PYTHONPATH=. pytest -q
+| Language pair | Rationale |
+|---|---|
+| Arabic–English | Contrasts Arabic and Latin scripts, right-to-left and left-to-right writing, and Semitic and Germanic languages. |
+| Hindi–English | Contrasts Devanagari and Latin scripts and Indo-Aryan and Germanic languages. |
+| Cantonese–English | Tests Han/Latin script differences and difficult segmentation in text that may not use whitespace consistently. |
+| Spanish–English | Creates a same-script condition in which Unicode script rules alone cannot identify the language. |
+
+Together, these pairs test whether performance remains stable across scripts, writing systems, language families, segmentation patterns, and same-script code-switching.
+
+## Tokenization and Word-Level LID
+
+The fixed tokenizer for Update 1 is the fast `xlm-roberta-base` tokenizer. The raw SwitchLingua data provides utterance text and language-pair metadata but does not provide a language label for every word.
+
+`src/switchlingua_labels.py` addresses this gap with explicitly marked **automatic weak LID labels**:
+
+- Unicode-script rules identify words in script-distinct pairs;
+- a pair-restricted Lingua detector handles ambiguous and same-script words; and
+- punctuation is assigned using the nearest available neighboring language.
+
+The tokenizer is called with `is_split_into_words=True`. Its `word_ids()` alignment copies each word’s LID to all of its subwords, preventing false switches inside a word that is split into multiple pieces.
+
+These weak labels make the real-data pipeline runnable, but they are not human-verified gold labels.
+
+## Predictive Labels
+
+For every valid subword at position `t`, the labels describe the upcoming token at `t+1`:
+
+```text
+switch_label[t] = 1 if LID(t + 1) != LID(t), otherwise 0
 ```
 
-## Member C: Streaming DataLoader and Causal Constraint
+When a switch occurs, the upcoming language burst is assigned a duration class:
 
-`src/streaming_dataloader.py` consumes Member B's `encode_and_label` output
-(optionally with a `language_pair` field) and builds right-padded batches:
+| Duration class | Upcoming burst length |
+|---:|---:|
+| 0 | 1–2 subword tokens |
+| 1 | 3–6 subword tokens |
+| 2 | 7 or more subword tokens |
 
-```python
-from src.streaming_dataloader import create_streaming_dataloader
+Label sentinels are handled as follows:
 
-train_loader = create_streaming_dataloader(train_records, batch_size=32, shuffle=True)
-val_loader = create_streaming_dataloader(
-    val_records, batch_size=32, lid_vocab=train_loader.dataset.lid_vocab
-)
-```
+| Value | Meaning |
+|---:|---|
+| `-1` | Valid position, but no language switch occurs |
+| `-100` | Invalid target position, special token, padding, or no available next-token target |
 
-Each batch contains `input_ids`, `attention_mask`, `current_lid`,
-`switch_labels`, `duration_labels`, `language_pair`, and `causal_mask`
-(`[batch, 1, L, L]`, boolean, `True` = may attend). Query `t` can only attend
-to real tokens at positions `0..t`; `to_additive_mask` converts it to
-0 / large-negative attention scores. Padding positions use `-100` for all
-label and LID fields; `duration_labels` keeps `-1` for valid non-switch
-positions. `current_lid[t]` is the language of the current sub-word only and
-never exposes `t+1`.
+Switch loss ignores `switch_label == -100`. Duration loss and duration metrics use only `duration_label >= 0`, which excludes both `-1` and `-100`.
 
-Training feeds full sequences with `causal_mask`, which is equivalent to
-prefix-only inputs. `iter_prefix_windows` materialises explicit
-`(x_0..x_t) -> labels[t]` samples for streaming evaluation and demos.
-`tests/test_streaming_dataloader.py` includes a future-leakage test that
-replaces every token after `t` and checks that model outputs at `<= t` are
-unchanged, plus a negative control showing the check fails without the causal
-mask. Example output:
+## Streaming DataLoader
+
+`src/streaming_dataloader.py` converts labeled utterances into right-padded PyTorch batches. Each batch contains:
+
+- `input_ids`;
+- `attention_mask`;
+- `current_lid`;
+- `switch_labels`;
+- `duration_labels`;
+- `language_pair`; and
+- `causal_mask`.
+
+Padding positions in label and LID tensors use `-100`. `make_split_loaders()` builds `lid_vocab` from the training data and forces validation and test loaders to reuse the same vocabulary.
+
+Run the DataLoader example with:
 
 ```bash
 PYTHONPATH=. python examples/member_c_dataloader_example.py
 ```
+
+When `data/processed/train.parquet` is available, the example prints real source text, automatic word LIDs, aligned labels, batch tensors, causal masks, and selected prefix windows. If the parquet file is unavailable, it falls back to a small demo.
+
+## Causal Constraint
+
+The DataLoader creates a lower-triangular attention mask. At position `t`, the model may attend only to positions `0...t`; future positions and padded keys are blocked.
+
+Full sequences can therefore be processed efficiently while preserving the same information constraint as explicit prefix windows. `iter_prefix_windows()` is also provided for streaming demonstrations.
+
+The tests modify every token after a selected position and verify that outputs through that position remain unchanged. A bidirectional negative control confirms that the same test fails when the causal constraint is removed.
+
+## Naive Current-Token Baseline
+
+The naive baseline estimates:
+
+```text
+P(switch at t + 1 | current token ID at t)
+```
+
+It learns token statistics from the training split only, chooses the decision threshold on validation, and evaluates once on test. The reported run uses seed 42, up to 500/150/150 rows per language pair for train/validation/test, and up to two utterances per row.
+
+| Test set | Anticipatory F1 | Precision | Recall | Duration accuracy |
+|---|---:|---:|---:|---:|
+| Overall | **0.4419** | 0.4157 | 0.4717 | 0.4953 |
+| Arabic–English | 0.5513 | 0.5284 | 0.5762 | 0.5116 |
+| Cantonese–English | 0.4017 | 0.3516 | 0.4685 | 0.5038 |
+| Hindi–English | 0.3023 | 0.2253 | 0.4594 | 0.5018 |
+| Spanish–English | 0.4885 | 0.5667 | 0.4293 | 0.4816 |
+
+The population standard deviation of pair-level Anticipatory F1 is **0.0937**, which is reported as the initial universality measure. The overall switch rate is only 6.94%, so raw accuracy is not used as the headline metric.
+
+The full unrounded output and run configuration are saved in `results/naive_baseline.json`.
+
+Run the baseline with:
+
+```bash
+PYTHONPATH=. python -m src.naive_baseline
+```
+
+## Repository Structure
+
+```text
+├── data/
+│   ├── metadata/
+│   └── processed/                 # local parquet files; ignored by Git
+├── examples/
+│   ├── member_b_label_example.py
+│   ├── member_c_dataloader_example.py
+│   └── plot_causal_mask.py
+├── notebooks/
+│   └── update_1.ipynb
+├── results/
+│   └── naive_baseline.json
+├── src/
+│   ├── naive_baseline.py
+│   ├── streaming_dataloader.py
+│   └── switchlingua_labels.py
+├── tests/
+│   ├── test_streaming_dataloader.py
+│   └── test_token_labels.py
+├── requirements.txt
+└── README.md
+```
+
+## Limitations
+
+- The raw dataset does not provide gold word-level LID annotations, so the current pipeline relies on automatic weak labels.
+- Same-script pairs such as Spanish–English remain difficult, especially for short words, names, and borrowings.
+- Punctuation inherits a neighboring language label and may shift an estimated switch boundary.
+- Cantonese–English segmentation and mixed Han/Latin text require further validation.
+- Duration is currently measured in XLM-R subword tokens rather than human-defined words.
+- The reported baseline uses sampled rows and a highly imbalanced switch distribution.
+- The current-token baseline is an initial reference system, not the final multitask transformer.
+
+The current metrics are initial engineering results based on automatic weak LIDs. They should not be presented as final gold-label benchmark results.
+
+## Next Steps
+
+1. **Audit word-level LID quality.** Manually review a stratified sample from every language pair, with special attention to short words, names, borrowings, and punctuation.
+2. **Improve same-script LID.** Compare the current weak detector with a stronger contextual LID model or human annotation.
+3. **Review Cantonese segmentation.** Validate mixed Han/Latin segmentation and decide whether duration should be reported in words or XLM-R subwords.
+4. **Evaluate more data.** Run the baseline over larger or complete splits and report confidence intervals in addition to pair-level F1 and standard deviation.
+5. **Address class imbalance.** Compare threshold tuning with class-weighted loss, focal loss, and probability calibration.
+6. **Train the multitask causal model.** Add a shared multilingual backbone with switch and duration heads, then compare XLM-R, mBERT, and causal alternatives under the same prefix-only evaluation.
+7. **Preserve reproducibility.** Keep the split seed, training-only `lid_vocab`, label conventions, and weak-LID status recorded with every experiment.
