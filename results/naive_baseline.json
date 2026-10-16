@@ -60,7 +60,7 @@
   "threshold": 0.27,
   "definition": "P(switch at t+1 | current token_id at t), trained on train only",
   "run": {
-    "created_at": "2026-10-14T04:00:20.161774+00:00",
+    "created_at": "2026-10-16T05:29:02.894724+00:00",
     "tokenizer": "xlm-roberta-base",
     "language_pairs": [
       "Arabic-English",
