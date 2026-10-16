@@ -3,11 +3,13 @@ import math
 import pytest
 import torch
 from torch import nn
+from transformers import XLMRobertaConfig, XLMRobertaModel
 
 from src.switchlingua_labels import IGNORE_INDEX, NON_SWITCH_DURATION, encode_and_label
 from src.streaming_dataloader import (
     SwitchLinguaStreamingDataset,
     build_causal_mask,
+    causal_mask_for_backbone,
     collate_streaming_batch,
     create_streaming_dataloader,
     iter_prefix_windows,
@@ -28,8 +30,6 @@ class FakeEncoding(dict):
 
 
 class FakeTokenizer:
-    """Splits words longer than two characters into two sub-words."""
-
     def __call__(self, words, *, is_split_into_words, return_attention_mask, padding=False, max_length=None, truncation=False):
         input_ids = [1]
         word_ids = [None]
@@ -125,10 +125,46 @@ def test_additive_mask_is_zero_where_allowed():
 
 
 def test_dataloader_yields_batches(records):
-    loader = create_streaming_dataloader(records, batch_size=2)
+    loader = create_streaming_dataloader(records, batch_size=2, pad_token_id=0)
     batch = next(iter(loader))
     assert batch["input_ids"].size(0) == 2
     assert batch["causal_mask"].dtype == torch.bool
+
+
+def test_dataloader_requires_tokenizer_pad_id(records):
+    with pytest.raises(ValueError, match="pad_token_id"):
+        create_streaming_dataloader(records, batch_size=2)
+
+
+def test_xlmr_cannot_see_future_tokens():
+    torch.manual_seed(42)
+    config = XLMRobertaConfig(
+        vocab_size=128,
+        hidden_size=16,
+        num_hidden_layers=1,
+        num_attention_heads=2,
+        intermediate_size=32,
+        max_position_embeddings=32,
+        pad_token_id=1,
+    )
+    model = XLMRobertaModel(config).eval()
+    original_ids = torch.tensor([[0, 10, 11, 12, 2]])
+    changed_ids = torch.tensor([[0, 10, 11, 90, 2]])
+    attention_mask = torch.ones_like(original_ids)
+    causal_mask = build_causal_mask(attention_mask)
+    backbone_mask = causal_mask_for_backbone(causal_mask)
+
+    with torch.no_grad():
+        original = model(
+            input_ids=original_ids,
+            attention_mask=backbone_mask,
+        ).last_hidden_state
+        changed = model(
+            input_ids=changed_ids,
+            attention_mask=backbone_mask,
+        ).last_hidden_state
+
+    assert torch.allclose(original[:, :3], changed[:, :3], atol=1e-6)
 
 
 def test_prefix_windows_contain_only_history(records):
@@ -149,8 +185,6 @@ def test_prefix_windows_contain_only_history(records):
 
 
 class TinyCausalSelfAttentionModel(nn.Module):
-    """Two-layer single-head attention model that consumes ``causal_mask``."""
-
     def __init__(self, vocab_size=128, hidden_size=16, num_layers=2):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, hidden_size)
@@ -195,8 +229,6 @@ def test_no_future_leakage_when_future_tokens_are_replaced(records):
 
 
 def test_leakage_check_detects_a_bidirectional_mask(records):
-    """Negative control: without the causal constraint the same check must fail."""
-
     torch.manual_seed(0)
     generator = torch.Generator().manual_seed(0)
     model = TinyCausalSelfAttentionModel().eval()
@@ -211,8 +243,6 @@ def test_leakage_check_detects_a_bidirectional_mask(records):
 
 
 def test_collated_inputs_at_t_do_not_depend_on_future_words():
-    """Model-visible fields up to t must be identical when only later words change."""
-
     base = make_record(["ana", "ok", "honestly"], ["ar", "en", "en"])
     changed = make_record(["ana", "ok", "zz"], ["ar", "en", "ar"])
     t = 3  # last sub-word of "ok"; the words after it differ
@@ -224,7 +254,13 @@ def test_collated_inputs_at_t_do_not_depend_on_future_words():
 
 
 def test_split_loaders_reuse_training_lid_vocab(records):
-    train, validation, test = make_split_loaders(records, records, records, batch_size=2)
+    train, validation, test = make_split_loaders(
+        records,
+        records,
+        records,
+        batch_size=2,
+        pad_token_id=0,
+    )
     assert validation.dataset.lid_vocab == train.dataset.lid_vocab
     assert test.dataset.lid_vocab == train.dataset.lid_vocab
 

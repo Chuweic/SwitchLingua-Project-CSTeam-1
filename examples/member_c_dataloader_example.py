@@ -1,5 +1,3 @@
-"""Streaming batch example; uses real parquet when it is available."""
-
 import argparse
 from pathlib import Path
 
@@ -56,6 +54,35 @@ def main():
     print("language_pair:", batch["language_pair"])
     print("causal_mask[1] (1 = may attend; padding keys are 0):")
     print(batch["causal_mask"][1, 0].int())
+
+    if parquet.exists():
+        display_tokens = tokenizer.convert_ids_to_tokens(records[0]["input_ids"])
+    else:
+        display_tokens = [str(token_id) for token_id in records[0]["input_ids"]]
+
+    print("\nToken-level predictive labels:")
+    print(
+        f"{'Position':<10}"
+        f"{'Token':<20}"
+        f"{'LID':<10}"
+        f"{'Switch':<10}"
+        f"{'Duration':<10}"
+    )
+    for position, (token, lid, switch, duration) in enumerate(
+        zip(
+            display_tokens,
+            records[0]["subword_language_ids"],
+            records[0]["switch_labels"],
+            records[0]["duration_labels"],
+        )
+    ):
+        print(
+            f"{position:<10}"
+            f"{token:<20}"
+            f"{str(lid):<10}"
+            f"{switch:<10}"
+            f"{duration:<10}"
+        )
 
     print("\nSelected prefix-only windows for the first utterance:")
     windows = list(iter_prefix_windows(records[0]))

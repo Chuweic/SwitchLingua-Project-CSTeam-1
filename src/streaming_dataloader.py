@@ -1,12 +1,3 @@
-"""Streaming DataLoader, batch collation, and causal masking (Member C).
-
-Each input record is the dictionary returned by
-``src.switchlingua_labels.encode_and_label`` (Member B), optionally extended
-with a ``language_pair`` string.  Labels are computed by Member B on the full
-utterance; this module only controls what the model is allowed to *see*:
-position ``t`` may attend to positions ``0..t`` and never to ``t+1`` or later.
-"""
-
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence
 
 import torch
@@ -38,8 +29,6 @@ def _validate_record(record: Mapping[str, Any]) -> None:
 
 
 def build_lid_vocab(records: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
-    """Map every language ID seen in ``records`` to a stable integer index."""
-
     languages = {
         language
         for record in records
@@ -50,12 +39,6 @@ def build_lid_vocab(records: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
 
 
 class SwitchLinguaStreamingDataset(Dataset):
-    """Holds Member B outputs and converts them to per-utterance tensors.
-
-    ``max_length`` truncates from the right *after* labelling, so the label at
-    the last kept position still refers to the true next sub-word.
-    """
-
     def __init__(
         self,
         records: Sequence[Mapping[str, Any]],
@@ -97,13 +80,6 @@ class SwitchLinguaStreamingDataset(Dataset):
 
 
 def build_causal_mask(attention_mask: torch.Tensor) -> torch.Tensor:
-    """Return a boolean ``[batch, 1, L, L]`` mask where ``True`` means "may attend".
-
-    Query ``i`` may attend to key ``j`` only when ``j <= i`` and key ``j`` is a
-    real (non-padding) token.  With right padding every query row keeps at
-    least one visible key, so softmax never sees a fully masked row.
-    """
-
     if attention_mask.dim() != 2:
         raise ValueError("attention_mask must have shape [batch, seq_len]")
     seq_len = attention_mask.size(1)
@@ -112,9 +88,15 @@ def build_causal_mask(attention_mask: torch.Tensor) -> torch.Tensor:
     return causal[None, None, :, :] & key_is_real
 
 
-def to_additive_mask(mask: torch.Tensor, dtype: torch.dtype = torch.float32) -> torch.Tensor:
-    """Convert a boolean "may attend" mask into 0 / large-negative scores."""
+def causal_mask_for_backbone(causal_mask: torch.Tensor) -> torch.Tensor:
+    if causal_mask.dim() != 4 or causal_mask.size(1) != 1:
+        raise ValueError("causal_mask must have shape [batch, 1, seq_len, seq_len]")
+    if causal_mask.size(2) != causal_mask.size(3):
+        raise ValueError("causal_mask must be square over token positions")
+    return causal_mask[:, 0].long()
 
+
+def to_additive_mask(mask: torch.Tensor, dtype: torch.dtype = torch.float32) -> torch.Tensor:
     additive = torch.zeros(mask.shape, dtype=dtype, device=mask.device)
     return additive.masked_fill(~mask, torch.finfo(dtype).min)
 
@@ -123,8 +105,6 @@ def collate_streaming_batch(
     features: Sequence[Mapping[str, Any]],
     pad_token_id: int = 0,
 ) -> Dict[str, Any]:
-    """Right-pad a list of dataset items into one batch with a causal mask."""
-
     if not features:
         raise ValueError("cannot collate an empty batch")
     batch_size = len(features)
@@ -154,17 +134,15 @@ def create_streaming_dataloader(
     records: Sequence[Mapping[str, Any]],
     batch_size: int = 32,
     shuffle: bool = False,
-    pad_token_id: int = 0,
+    pad_token_id: Optional[int] = None,
     lid_vocab: Optional[Mapping[str, int]] = None,
     max_length: Optional[int] = None,
     **dataloader_kwargs: Any,
 ) -> DataLoader:
-    """Build a DataLoader over Member B records.
-
-    Use the training set's ``lid_vocab`` for validation and test loaders so the
-    language indices stay consistent across splits.
-    """
-
+    if pad_token_id is None:
+        raise ValueError("pad_token_id must be provided from the tokenizer")
+    if pad_token_id < 0:
+        raise ValueError("pad_token_id must be non-negative")
     dataset = SwitchLinguaStreamingDataset(records, lid_vocab=lid_vocab, max_length=max_length)
     return DataLoader(
         dataset,
@@ -176,13 +154,6 @@ def create_streaming_dataloader(
 
 
 def iter_prefix_windows(record: Mapping[str, Any], include_ignored: bool = False) -> Iterator[Dict[str, Any]]:
-    """Yield explicit prefix-only samples ``(x_0..x_t) -> labels[t]``.
-
-    Intended for streaming evaluation and demonstrations.  For training, feed
-    the full sequence with ``causal_mask`` instead: it is equivalent and avoids
-    the O(L^2) blow-up of materialising every prefix.
-    """
-
     _validate_record(record)
     for position in range(len(record["input_ids"])):
         switch_label = record["switch_labels"][position]
@@ -208,8 +179,6 @@ def make_split_loaders(
     test_records: Sequence[Mapping[str, Any]],
     **loader_kwargs: Any,
 ):
-    """Build all splits while forcing validation/test to reuse train LIDs."""
-
     loader_kwargs = dict(loader_kwargs)
     loader_kwargs.pop("shuffle", None)
     train_loader = create_streaming_dataloader(train_records, shuffle=True, **loader_kwargs)
@@ -232,8 +201,6 @@ def multitask_cross_entropy(
     switch_weight: float = 1.0,
     duration_weight: float = 1.0,
 ) -> Dict[str, torch.Tensor]:
-    """Mask switch ``-100`` and both duration sentinels (``-1``, ``-100``)."""
-
     if switch_logits.shape[:-1] != switch_labels.shape:
         raise ValueError("switch logits/labels shapes do not align")
     if duration_logits.shape[:-1] != duration_labels.shape:
