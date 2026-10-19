@@ -57,7 +57,7 @@ def records():
     ]
 
 
-def test_dataset_converts_member_b_output_to_tensors(records):
+def test_dataset_converts_labeled_record_to_tensors(records):
     dataset = SwitchLinguaStreamingDataset(records)
     item = dataset[0]
 

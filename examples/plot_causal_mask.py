@@ -1,7 +1,7 @@
 """Draw the causal attention mask produced by ``collate_streaming_batch``.
 
-Saves ``docs/figures/causal_mask.png``. The mask is computed by the real
-Member C code from a padded two-utterance batch, not drawn by hand.
+Saves ``docs/figures/causal_mask.png``. The mask is computed from a padded
+two-utterance batch.
 """
 
 import os
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch, Rectangle
 
-from examples.member_b_label_example import DemoTokenizer
+from examples.token_label_example import DemoTokenizer
 from src.switchlingua_labels import IGNORE_INDEX, encode_and_label
 from src.streaming_dataloader import SwitchLinguaStreamingDataset, collate_streaming_batch
 

@@ -104,6 +104,33 @@ def test_real_text_tokenizer_splits_script_changes_and_arabic_punctuation():
     assert switchlingua_labels.tokenize_mixed_text("الاصطناعي، خاصة") == ["الاصطناعي", "،", "خاصة"]
 
 
+def test_han_languages_use_word_segmentation_before_model_tokenization():
+    assert switchlingua_labels.tokenize_mixed_text(
+        "我喜欢机器学习", language="Chinese"
+    ) == ["我", "喜欢", "机器", "学习"]
+    assert switchlingua_labels.tokenize_mixed_text(
+        "研究team真係好", language="Cantonese"
+    ) == ["研究", "team", "真", "係", "好"]
+
+
+def test_mixed_han_and_latin_text_keeps_language_aware_word_units():
+    assert switchlingua_labels.tokenize_mixed_text(
+        "我like机器", language="Chinese"
+    ) == ["我", "like", "机器"]
+
+
+def test_space_delimited_languages_keep_words_and_split_punctuation():
+    assert switchlingua_labels.tokenize_mixed_text(
+        "Das ist gut.", language="German"
+    ) == ["Das", "ist", "gut", "."]
+
+
+def test_latin_apostrophes_stay_inside_words():
+    assert switchlingua_labels.tokenize_mixed_text(
+        "l'homme aujourd'hui", language="French"
+    ) == ["l'homme", "aujourd'hui"]
+
+
 def test_pair_restricted_lid_handles_script_distinct_text():
     words, lids = switchlingua_labels.PairRestrictedWordLID().annotate(
         "أنا like this.", "Arabic", "English"

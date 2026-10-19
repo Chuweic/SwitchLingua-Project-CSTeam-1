@@ -1,6 +1,5 @@
-"""Runnable Member B example using a tiny FastTokenizer-compatible tokenizer.
+"""Runnable token-label example using a tiny FastTokenizer-compatible tokenizer.
 
-Replace DemoTokenizer with a Hugging Face fast tokenizer in the full pipeline.
 The word-level language IDs below are supplied preprocessing annotations; they
 are not inferred by the tokenizer.
 """

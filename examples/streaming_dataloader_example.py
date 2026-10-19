@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from examples.member_b_label_example import DemoTokenizer
+from examples.token_label_example import DemoTokenizer
 from src.switchlingua_labels import encode_and_label, load_fast_tokenizer, records_from_parquet
 from src.streaming_dataloader import create_streaming_dataloader, iter_prefix_windows
 

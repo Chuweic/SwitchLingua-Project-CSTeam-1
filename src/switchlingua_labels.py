@@ -217,8 +217,13 @@ def _char_script(char: str) -> str:
     return "PUNCT"
 
 
-def tokenize_mixed_text(text: str) -> List[str]:
-    """Split at whitespace, punctuation, and Unicode-script changes."""
+def tokenize_mixed_text(text: str, language: Optional[str] = None) -> List[str]:
+    """Pre-tokenize mixed text using language-aware word boundaries.
+
+    Chinese and Cantonese Han spans use ``jieba`` word segmentation. Other
+    languages use whitespace, punctuation, and script boundaries. The result
+    is passed to the shared XLM-R tokenizer as ``is_split_into_words=True``.
+    """
 
     if not isinstance(text, str) or not text.strip():
         raise ValueError("text must be a non-empty string")
@@ -233,17 +238,52 @@ def tokenize_mixed_text(text: str) -> List[str]:
         current = []
         current_script = None
 
-    for char in text:
+    index = 0
+    while index < len(text):
+        char = text[index]
         if char.isspace():
             flush()
+            index += 1
             continue
         script = _char_script(char)
         if script == "PUNCT":
+            if (
+                char in "'’"
+                and current
+                and index + 1 < len(text)
+                and text[index + 1].isalpha()
+            ):
+                current.append(char)
+                index += 1
+                continue
             flush()
             tokens.append(char)
+            index += 1
             continue
-        if script == "JOINER" and current:
-            current.append(char)
+        if script == "HAN":
+            flush()
+            end = index + 1
+            while end < len(text) and _char_script(text[end]) == "HAN":
+                end += 1
+            han_span = text[index:end]
+            if language in {"Chinese", "Cantonese"}:
+                try:
+                    import jieba
+                except ImportError as exc:
+                    raise ImportError(
+                        "install jieba to segment Chinese and Cantonese text"
+                    ) from exc
+                tokens.extend(piece for piece in jieba.lcut(han_span, cut_all=False) if piece.strip())
+            elif language == "Japanese":
+                tokens.extend(han_span)
+            else:
+                tokens.append(han_span)
+            index = end
+            continue
+        if language == "Japanese" and script in {"HIRAGANA", "KATAKANA"}:
+            flush()
+            tokens.append(char)
+            index += 1
             continue
         compatible = (
             current_script is None
@@ -255,6 +295,7 @@ def tokenize_mixed_text(text: str) -> List[str]:
         current.append(char)
         if current_script is None:
             current_script = script
+        index += 1
     flush()
     return tokens
 
@@ -299,7 +340,15 @@ class PairRestrictedWordLID:
             candidates = (LANGUAGE_NAME_TO_CODE[first_language], LANGUAGE_NAME_TO_CODE[second_language])
         except KeyError as exc:
             raise ValueError(f"unsupported SwitchLingua language: {exc.args[0]!r}") from exc
-        words = tokenize_mixed_text(text)
+        segmentation_language = next(
+            (
+                language
+                for language in (first_language, second_language)
+                if language in {"Chinese", "Cantonese", "Japanese"}
+            ),
+            None,
+        )
+        words = tokenize_mixed_text(text, language=segmentation_language)
         labels: List[Optional[str]] = []
         for token in words:
             label = self._script_label(token, candidates)
