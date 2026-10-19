@@ -1,0 +1,217 @@
+{
+  "overall": {
+    "anticipatory_f1": 0.46431372549019606,
+    "precision": 0.4746125066809193,
+    "recall": 0.45445240532241554,
+    "accuracy": 0.9075794753364846,
+    "support": 110852,
+    "positive_support": 9770,
+    "duration_accuracy": 0.5059365404298874,
+    "duration_support": 9770,
+    "switch_rate": 0.0881355320607657
+  },
+  "by_language_pair": {
+    "Arabic-English": {
+      "anticipatory_f1": 0.5508684863523573,
+      "precision": 0.5298329355608592,
+      "recall": 0.5736434108527132,
+      "accuracy": 0.9436488169364882,
+      "support": 6424,
+      "positive_support": 387,
+      "duration_accuracy": 0.4702842377260982,
+      "duration_support": 387,
+      "switch_rate": 0.06024283935242839
+    },
+    "Cantonese-English": {
+      "anticipatory_f1": 0.39556004036326947,
+      "precision": 0.35315315315315315,
+      "recall": 0.44954128440366975,
+      "accuracy": 0.9177310808954814,
+      "support": 7281,
+      "positive_support": 436,
+      "duration_accuracy": 0.4793577981651376,
+      "duration_support": 436,
+      "switch_rate": 0.05988188435654443
+    },
+    "Chinese-English": {
+      "anticipatory_f1": 0.5752302968270214,
+      "precision": 0.47627118644067795,
+      "recall": 0.7260981912144703,
+      "accuracy": 0.9454879810849862,
+      "support": 7613,
+      "positive_support": 387,
+      "duration_accuracy": 0.5607235142118863,
+      "duration_support": 387,
+      "switch_rate": 0.050834099566530934
+    },
+    "French-English": {
+      "anticipatory_f1": 0.3909348441926345,
+      "precision": 0.5064220183486239,
+      "recall": 0.31833910034602075,
+      "accuracy": 0.8841906813897118,
+      "support": 7426,
+      "positive_support": 867,
+      "duration_accuracy": 0.49480968858131485,
+      "duration_support": 867,
+      "switch_rate": 0.11675195259897657
+    },
+    "German-English": {
+      "anticipatory_f1": 0.47242921013412814,
+      "precision": 0.5400340715502555,
+      "recall": 0.4198675496688742,
+      "accuracy": 0.8895648104819841,
+      "support": 6411,
+      "positive_support": 755,
+      "duration_accuracy": 0.5046357615894039,
+      "duration_support": 755,
+      "switch_rate": 0.11776633910466386
+    },
+    "German-French": {
+      "anticipatory_f1": 0.4466571834992888,
+      "precision": 0.48085758039816234,
+      "recall": 0.4169986719787517,
+      "accuracy": 0.8876696505919722,
+      "support": 6926,
+      "positive_support": 753,
+      "duration_accuracy": 0.5192563081009296,
+      "duration_support": 753,
+      "switch_rate": 0.10872076234478775
+    },
+    "Hindi-English": {
+      "anticipatory_f1": 0.2784163473818646,
+      "precision": 0.20801526717557253,
+      "recall": 0.42084942084942084,
+      "accuracy": 0.9234832069339112,
+      "support": 7384,
+      "positive_support": 259,
+      "duration_accuracy": 0.583011583011583,
+      "duration_support": 259,
+      "switch_rate": 0.03507583965330444
+    },
+    "Italian-English": {
+      "anticipatory_f1": 0.45833333333333337,
+      "precision": 0.5633001422475107,
+      "recall": 0.38634146341463416,
+      "accuracy": 0.867215207830898,
+      "support": 7049,
+      "positive_support": 1025,
+      "duration_accuracy": 0.5102439024390244,
+      "duration_support": 1025,
+      "switch_rate": 0.1454106965527025
+    },
+    "Japanese-English": {
+      "anticipatory_f1": 0.5965965965965966,
+      "precision": 0.49337748344370863,
+      "recall": 0.7544303797468355,
+      "accuracy": 0.9659427026113412,
+      "support": 11833,
+      "positive_support": 395,
+      "duration_accuracy": 0.6658227848101266,
+      "duration_support": 395,
+      "switch_rate": 0.033381222006253694
+    },
+    "Korean-English": {
+      "anticipatory_f1": 0.6362545018007203,
+      "precision": 0.6134259259259259,
+      "recall": 0.6608478802992519,
+      "accuracy": 0.9577759197324415,
+      "support": 7176,
+      "positive_support": 401,
+      "duration_accuracy": 0.5635910224438903,
+      "duration_support": 401,
+      "switch_rate": 0.055880713489409144
+    },
+    "Malay-English": {
+      "anticipatory_f1": 0.4101479915433404,
+      "precision": 0.485,
+      "recall": 0.3553113553113553,
+      "accuracy": 0.8718027262980549,
+      "support": 6529,
+      "positive_support": 819,
+      "duration_accuracy": 0.44078144078144077,
+      "duration_support": 819,
+      "switch_rate": 0.12544034308469904
+    },
+    "Philippines-English": {
+      "anticipatory_f1": 0.40464743589743585,
+      "precision": 0.4236577181208054,
+      "recall": 0.38726993865030673,
+      "accuracy": 0.798999053158393,
+      "support": 7393,
+      "positive_support": 1304,
+      "duration_accuracy": 0.47776073619631904,
+      "duration_support": 1304,
+      "switch_rate": 0.1763830650615447
+    },
+    "Russian-English": {
+      "anticipatory_f1": 0.5141562853907136,
+      "precision": 0.4477317554240631,
+      "recall": 0.6037234042553191,
+      "accuracy": 0.9382289416846652,
+      "support": 6945,
+      "positive_support": 376,
+      "duration_accuracy": 0.45478723404255317,
+      "duration_support": 376,
+      "switch_rate": 0.05413966882649388
+    },
+    "Spanish-English": {
+      "anticipatory_f1": 0.4736472241742796,
+      "precision": 0.5273865414710485,
+      "recall": 0.4298469387755102,
+      "accuracy": 0.8870967741935484,
+      "support": 6634,
+      "positive_support": 784,
+      "duration_accuracy": 0.5102040816326531,
+      "duration_support": 784,
+      "switch_rate": 0.11817907747965029
+    },
+    "Vietnamese-English": {
+      "anticipatory_f1": 0.4990780577750461,
+      "precision": 0.5043478260869565,
+      "recall": 0.49391727493917276,
+      "accuracy": 0.8958865610628512,
+      "support": 7828,
+      "positive_support": 822,
+      "duration_accuracy": 0.5060827250608273,
+      "duration_support": 822,
+      "switch_rate": 0.10500766479305058
+    }
+  },
+  "universality_std": 0.08979200102124812,
+  "threshold": 0.3,
+  "definition": "P(switch at t+1 | current token_id at t), trained on train only",
+  "run": {
+    "created_at": "2026-10-19T06:25:28.358420+00:00",
+    "tokenizer": "xlm-roberta-base",
+    "language_pairs": [
+      "Arabic-English",
+      "Cantonese-English",
+      "Chinese-English",
+      "French-English",
+      "German-English",
+      "German-French",
+      "Hindi-English",
+      "Italian-English",
+      "Japanese-English",
+      "Korean-English",
+      "Malay-English",
+      "Philippines-English",
+      "Russian-English",
+      "Spanish-English",
+      "Vietnamese-English"
+    ],
+    "weak_lid_labels": true,
+    "seed": 42,
+    "rows_per_pair": {
+      "train": 500,
+      "validation": 150,
+      "test": 150
+    },
+    "utterances_per_row": 2,
+    "record_counts": {
+      "train": 13145,
+      "validation": 3966,
+      "test": 3939
+    }
+  }
+}
