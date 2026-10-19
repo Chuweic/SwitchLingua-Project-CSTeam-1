@@ -9,9 +9,20 @@ NON_SWITCH_DURATION = -1
 DEFAULT_TOKENIZER = "xlm-roberta-base"
 SELECTED_LANGUAGE_PAIRS = (
     "Arabic-English",
-    "Hindi-English",
     "Cantonese-English",
+    "Chinese-English",
+    "French-English",
+    "German-English",
+    "German-French",
+    "Hindi-English",
+    "Italian-English",
+    "Japanese-English",
+    "Korean-English",
+    "Malay-English",
+    "Philippines-English",
+    "Russian-English",
     "Spanish-English",
+    "Vietnamese-English",
 )
 
 LANGUAGE_NAME_TO_CODE = {
