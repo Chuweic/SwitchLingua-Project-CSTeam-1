@@ -15,15 +15,25 @@ Project Update 1 establishes the data pipeline, predictive labels, causal constr
 
 ## Language Pairs
 
-The current evaluation covers all 15 language pairs available in the processed SwitchLingua data:
+We evaluate all 15 language pairs available in the cleaned SwitchLingua data to test universality:
 
-| Category | Language pairs | Why they matter |
-|---|---|---|
-| Cross-script | Arabic–English, Cantonese–English, Chinese–English, Hindi–English, Japanese–English, Korean–English, Russian–English | Tests whether script differences provide reliable switch cues while introducing segmentation and transliteration challenges. |
-| Same-script | French–English, German–English, Italian–English, Malay–English, Philippines–English, Spanish–English, Vietnamese–English | Tests harder cases where Unicode script alone cannot distinguish the two languages. |
-| Non-English pivot | German–French | Checks whether the pipeline generalizes beyond English-centered code-switching. |
-
-Using all 15 pairs provides a broader initial universality audit than the earlier four-pair subset.
+| Language pair | Rationale |
+|---|---|
+| Arabic–English | Different scripts, writing directions, and language families. |
+| Cantonese–English | Han/Latin mixing and difficult segmentation. |
+| Chinese–English | Han/Latin contrast and cross-script switching. |
+| French–English | Same-script Romance/Germanic contrast. |
+| German–English | Same-script Germanic contrast. |
+| German–French | Same-script contrast between two European languages. |
+| Hindi–English | Devanagari/Latin contrast and Indo-Aryan/Germanic contrast. |
+| Italian–English | Same-script Romance/Germanic contrast. |
+| Japanese–English | Japanese script variation and Latin mixing. |
+| Korean–English | Hangul/Latin contrast. |
+| Malay–English | Same-script Southeast Asian/English contrast. |
+| Philippines–English | Same-script Tagalog/English contrast. |
+| Russian–English | Cyrillic/Latin contrast. |
+| Spanish–English | Same-script pair that cannot be separated using Unicode script alone. |
+| Vietnamese–English | Same-script contrast with diacritics. |
 
 ## Dataset and Tokenization
 
@@ -108,18 +118,6 @@ P(switch at t+1 | current token ID at t)
 
 It learns token statistics from the training split, selects its threshold on validation data, and evaluates once on the test split.
 
-The formal 15-pair run uses at most 500 training rows, 150 validation rows, and 150 test rows per pair, with up to two utterances from each row:
-
-```bash
-python -m src.naive_baseline \
-  --data-dir data/processed \
-  --train-rows-per-pair 500 \
-  --validation-rows-per-pair 150 \
-  --test-rows-per-pair 150 \
-  --utterances-per-row 2 \
-  --output results/naive_baseline_15pairs.json
-```
-
 | Test set | Anticipatory F1 | Precision | Recall | Duration accuracy |
 |---|---:|---:|---:|---:|
 | Overall | **0.4643** | 0.4746 | 0.4545 | 0.5059 |
@@ -139,9 +137,9 @@ python -m src.naive_baseline \
 | Spanish–English | 0.4736 | 0.5274 | 0.4298 | 0.5102 |
 | Vietnamese–English | 0.4991 | 0.5043 | 0.4939 | 0.5061 |
 
-The validation-selected threshold is **0.30**. The overall test switch rate is **8.81%**, so raw accuracy is not used as the main metric. The standard deviation of pair-level Anticipatory F1 is **0.0898**, which is the initial universality measure.
+The overall switch rate is **8.81%**, so raw accuracy is not used as the main metric. The standard deviation of pair-level Anticipatory F1 is **0.0898**, which is the initial universality measure.
 
-Full results are stored in `results/naive_baseline_15pairs.json`.
+Full 15-pair results are stored in `results/naive_baseline_15pairs.json`.
 
 ## Setup and Tests
 
@@ -161,20 +159,19 @@ Expected result:
 ## Limitations
 
 - The current LIDs are automatic weak labels rather than gold annotations.
-- Same-script pairs remain difficult to classify, especially for short words, names, and borrowings.
+- Spanish–English short words, names, and borrowings remain difficult to classify.
 - Punctuation may shift an estimated switch boundary.
-- Cantonese–English and Chinese–English segmentation require further validation.
+- Cantonese–English segmentation requires further validation.
 - Duration is currently measured in XLM-R subword tokens.
 - Exact utterance overlap across splits should be audited before full-model training.
-- The formal baseline uses balanced per-pair row caps rather than every available row.
 
 The current metrics are initial engineering results and should not be presented as final gold-label benchmark results.
 
 ## Next Steps
 
-1. Manually audit word-level LID quality across all 15 language pairs.
-2. Improve same-script LID handling for short words, names, and borrowings.
-3. Validate Cantonese–English and Chinese–English segmentation and the use of subword-based duration labels.
+1. Manually audit word-level LID quality for each selected language pair.
+2. Improve same-script LID handling for Spanish–English short words, names, and borrowings.
+3. Validate Cantonese–English segmentation and the use of subword-based duration labels.
 4. Audit and remove exact utterance overlap across data splits.
 5. Evaluate the baseline on larger or complete data splits.
 6. Train a causal multilingual transformer with switch and duration prediction heads.
