@@ -104,6 +104,11 @@ def test_real_text_tokenizer_splits_script_changes_and_arabic_punctuation():
     assert switchlingua_labels.tokenize_mixed_text("الاصطناعي، خاصة") == ["الاصطناعي", "،", "خاصة"]
 
 
+def test_combining_marks_stay_attached_to_their_base_token():
+    assert switchlingua_labels.tokenize_mixed_text("أحياناً أحس") == ["أحياناً", "أحس"]
+    assert switchlingua_labels.tokenize_mixed_text("cafe\u0301 noir") == ["cafe\u0301", "noir"]
+
+
 def test_han_languages_use_word_segmentation_before_model_tokenization():
     assert switchlingua_labels.tokenize_mixed_text(
         "我喜欢机器学习", language="Chinese"
@@ -129,6 +134,104 @@ def test_latin_apostrophes_stay_inside_words():
     assert switchlingua_labels.tokenize_mixed_text(
         "l'homme aujourd'hui", language="French"
     ) == ["l'homme", "aujourd'hui"]
+
+
+def test_default_scope_has_fourteen_english_pivot_pairs():
+    pairs = switchlingua_labels.SELECTED_LANGUAGE_PAIRS
+
+    assert len(pairs) == 14
+    assert "German-French" not in pairs
+    assert all(pair.endswith("-English") for pair in pairs)
+
+
+def test_drop_punctuation_preserves_words_and_internal_apostrophes():
+    words = ["Bonjour", ",", "l'homme", "!", "😊"]
+    lids = ["fr", "fr", "fr", "fr", "fr"]
+
+    kept_words, kept_lids = switchlingua_labels.apply_punctuation_policy(
+        words,
+        lids,
+        mode="drop",
+    )
+
+    assert kept_words == ["Bonjour", "l'homme"]
+    assert kept_lids == ["fr", "fr"]
+
+
+def test_keep_punctuation_returns_aligned_copies():
+    words = ["hello", "!", "مرحبا"]
+    lids = ["en", "en", "ar"]
+
+    kept_words, kept_lids = switchlingua_labels.apply_punctuation_policy(
+        words,
+        lids,
+        mode="keep",
+    )
+
+    assert kept_words == words
+    assert kept_lids == lids
+    assert kept_words is not words
+    assert kept_lids is not lids
+
+
+def test_punctuation_policy_rejects_invalid_mode_and_misaligned_lids():
+    with pytest.raises(ValueError, match="punctuation mode"):
+        switchlingua_labels.apply_punctuation_policy(["hello"], ["en"], mode="other")
+    with pytest.raises(ValueError, match="same length"):
+        switchlingua_labels.apply_punctuation_policy(["hello", "!"], ["en"], mode="drop")
+
+
+def test_labels_are_recomputed_after_punctuation_is_dropped():
+    words = ["hello", "!", "مرحبا"]
+    lids = ["en", "en", "ar"]
+    filtered_words, filtered_lids = switchlingua_labels.apply_punctuation_policy(
+        words,
+        lids,
+        mode="drop",
+    )
+
+    result = encode_and_label_impl(FakeTokenizer(), filtered_words, filtered_lids)
+
+    assert filtered_words == ["hello", "مرحبا"]
+    assert 1 in result["switch_labels"]
+    switch_position = result["switch_labels"].index(1)
+    assert result["duration_labels"][switch_position] == 0
+
+
+def test_parquet_adapter_applies_punctuation_mode_before_labeling(monkeypatch):
+    pandas = pytest.importorskip("pandas")
+    table = pandas.DataFrame(
+        [
+            {
+                "row_id": 1,
+                "first_language": "Arabic",
+                "second_language": "English",
+                "utterances": ["مرحبا, hello!"],
+                "language_pair": "Arabic-English",
+            },
+            {
+                "row_id": 2,
+                "first_language": "German",
+                "second_language": "French",
+                "utterances": ["Guten Tag, bonjour!"],
+                "language_pair": "German-French",
+            },
+        ]
+    )
+    monkeypatch.setattr(pandas, "read_parquet", lambda _: table)
+
+    records = switchlingua_labels.records_from_parquet(
+        "unused.parquet",
+        FakeTokenizer(),
+        punctuation_mode="drop",
+    )
+
+    assert len(records) == 1
+    assert records[0]["language_pair"] == "Arabic-English"
+    assert records[0]["words"] == ["مرحبا", "hello"]
+    assert records[0]["removed_punctuation_count"] == 2
+    assert records[0]["punctuation_mode"] == "drop"
+    assert 1 in records[0]["switch_labels"]
 
 
 def test_pair_restricted_lid_handles_script_distinct_text():

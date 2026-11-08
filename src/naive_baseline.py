@@ -11,6 +11,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 from src.switchlingua_labels import (
     DEFAULT_TOKENIZER,
     IGNORE_INDEX,
+    PUNCTUATION_MODES,
     SELECTED_LANGUAGE_PAIRS,
     load_fast_tokenizer,
     records_from_parquet,
@@ -144,6 +145,12 @@ def main() -> None:
     parser.add_argument("--test-rows-per-pair", type=int, default=150)
     parser.add_argument("--utterances-per-row", type=int, default=2)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--punctuation-mode",
+        choices=PUNCTUATION_MODES,
+        default="keep",
+        help="Keep punctuation tokens or drop them before tokenization and label generation.",
+    )
     args = parser.parse_args()
 
     tokenizer = load_fast_tokenizer(args.tokenizer)
@@ -160,6 +167,7 @@ def main() -> None:
             max_rows_per_pair=limit,
             max_utterances_per_row=args.utterances_per_row,
             seed=args.seed,
+            punctuation_mode=args.punctuation_mode,
         )
         for split, limit in limits.items()
     }
@@ -171,6 +179,7 @@ def main() -> None:
         "tokenizer": args.tokenizer,
         "language_pairs": args.pairs,
         "weak_lid_labels": True,
+        "punctuation_mode": args.punctuation_mode,
         "seed": args.seed,
         "rows_per_pair": limits,
         "utterances_per_row": args.utterances_per_row,

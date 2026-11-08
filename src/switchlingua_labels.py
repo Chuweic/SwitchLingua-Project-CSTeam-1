@@ -7,13 +7,13 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 IGNORE_INDEX = -100
 NON_SWITCH_DURATION = -1
 DEFAULT_TOKENIZER = "xlm-roberta-base"
+PUNCTUATION_MODES = ("keep", "drop")
 SELECTED_LANGUAGE_PAIRS = (
     "Arabic-English",
     "Cantonese-English",
     "Chinese-English",
     "French-English",
     "German-English",
-    "German-French",
     "Hindi-English",
     "Italian-English",
     "Japanese-English",
@@ -217,6 +217,48 @@ def _char_script(char: str) -> str:
     return "PUNCT"
 
 
+def is_punctuation_or_symbol_token(token: str) -> bool:
+    """Return whether a complete token contains only punctuation/symbols.
+
+    Internal apostrophes are retained because a token such as ``l'homme`` also
+    contains letters. Standalone punctuation and symbols (including emoji) are
+    removed by the punctuation ablation.
+    """
+
+    if not isinstance(token, str) or not token:
+        raise ValueError("token must be a non-empty string")
+    visible_characters = [char for char in token if not char.isspace()]
+    return bool(visible_characters) and all(
+        unicodedata.category(char).startswith(("P", "S"))
+        for char in visible_characters
+    )
+
+
+def apply_punctuation_policy(
+    words: Sequence[str],
+    word_language_ids: Sequence[str],
+    *,
+    mode: str = "keep",
+) -> Tuple[List[str], List[str]]:
+    """Apply the controlled punctuation ablation to aligned word/LID lists."""
+
+    if mode not in PUNCTUATION_MODES:
+        raise ValueError(
+            f"unsupported punctuation mode {mode!r}; expected one of {PUNCTUATION_MODES}"
+        )
+    if len(words) != len(word_language_ids):
+        raise ValueError("words and word_language_ids must have the same length")
+    if mode == "keep":
+        return list(words), list(word_language_ids)
+
+    kept = [
+        (word, language_id)
+        for word, language_id in zip(words, word_language_ids)
+        if not is_punctuation_or_symbol_token(word)
+    ]
+    return [word for word, _ in kept], [language_id for _, language_id in kept]
+
+
 def tokenize_mixed_text(text: str, language: Optional[str] = None) -> List[str]:
     """Pre-tokenize mixed text using language-aware word boundaries.
 
@@ -246,6 +288,19 @@ def tokenize_mixed_text(text: str, language: Optional[str] = None) -> List[str]:
             index += 1
             continue
         script = _char_script(char)
+        if script == "JOINER":
+            # Unicode combining marks belong to the preceding grapheme. Keep
+            # them inside the same pre-token so Arabic diacritics and
+            # decomposed Latin accents do not become artificial tokens.
+            if current:
+                current.append(char)
+            elif tokens and not is_punctuation_or_symbol_token(tokens[-1]):
+                tokens[-1] += char
+            else:
+                current.append(char)
+                current_script = script
+            index += 1
+            continue
         if script == "PUNCT":
             if (
                 char in "'’"
@@ -386,8 +441,13 @@ def records_from_parquet(
     max_rows_per_pair: Optional[int] = None,
     max_utterances_per_row: Optional[int] = None,
     seed: int = 42,
+    punctuation_mode: str = "keep",
 ) -> List[Dict[str, Any]]:
-    """Convert a real split into the records consumed by the existing loader."""
+    """Convert a real split into records, optionally dropping punctuation.
+
+    Punctuation is filtered before model tokenization and label generation so
+    switch and duration targets are always aligned with the actual input.
+    """
 
     import pandas as pd
 
@@ -413,7 +473,16 @@ def records_from_parquet(
         for utterance_index, text in enumerate(utterances):
             if not isinstance(text, str) or not text.strip():
                 continue
-            words, word_lids = lid.annotate(text, row.first_language, row.second_language)
+            original_words, original_word_lids = lid.annotate(
+                text, row.first_language, row.second_language
+            )
+            words, word_lids = apply_punctuation_policy(
+                original_words,
+                original_word_lids,
+                mode=punctuation_mode,
+            )
+            if not words:
+                continue
             record = encode_and_label(tokenizer, words, word_lids)
             record.update(
                 {
@@ -424,6 +493,8 @@ def records_from_parquet(
                     "word_language_ids": word_lids,
                     "language_pair": row.language_pair,
                     "lid_source": "automatic-weak-label",
+                    "punctuation_mode": punctuation_mode,
+                    "removed_punctuation_count": len(original_words) - len(words),
                 }
             )
             records.append(record)

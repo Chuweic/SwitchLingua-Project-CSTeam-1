@@ -9,8 +9,8 @@ from src.switchlingua_labels import (
 from tests.test_token_labels import FakeTokenizer
 
 
-def test_german_french_is_configured():
-    assert "German-French" in SELECTED_LANGUAGE_PAIRS
+def test_german_french_is_supported_but_excluded_from_default_scope():
+    assert "German-French" not in SELECTED_LANGUAGE_PAIRS
     assert LANGUAGE_NAME_TO_CODE["German"] == "de"
     assert LANGUAGE_NAME_TO_CODE["French"] == "fr"
 
