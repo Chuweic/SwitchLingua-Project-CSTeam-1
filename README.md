@@ -11,19 +11,18 @@ The project includes two tasks:
 1. **Switch prediction:** predict whether `LID(t+1) != LID(t)`.
 2. **Duration prediction:** when a switch occurs, predict whether the upcoming segment is short, medium, or long.
 
-Project Update 1 establishes the data pipeline, predictive labels, causal constraints, and a current-token-only baseline.
+Project Update 2 keeps the causal data pipeline and adds a 14-pair preprocessing revision, a punctuation ablation, and a manual audit of the weak Language ID (LID) labels.
 
 ## Language Pairs
 
-The current evaluation covers all 15 language pairs available in the processed SwitchLingua data:
+The current evaluation covers 14 English-pivot language pairs from the processed SwitchLingua data:
 
 | Category | Language pairs | Why they matter |
 |---|---|---|
 | Cross-script | Arabic–English, Cantonese–English, Chinese–English, Hindi–English, Japanese–English, Korean–English, Russian–English | Tests whether script differences provide reliable switch cues while introducing segmentation and transliteration challenges. |
 | Same-script | French–English, German–English, Italian–English, Malay–English, Philippines–English, Spanish–English, Vietnamese–English | Tests harder cases where Unicode script alone cannot distinguish the two languages. |
-| Non-English pivot | German–French | Checks whether the pipeline generalizes beyond English-centered code-switching. |
 
-Using all 15 pairs provides a broader initial universality audit than the earlier four-pair subset.
+German–French is excluded from the Update 2 experiments. Keeping a shared English pivot makes the preprocessing rules and cross-pair comparison consistent while the team tests universality across scripts and language families.
 
 ## Dataset and Tokenization
 
@@ -38,7 +37,14 @@ data/processed/
 └── test.parquet
 ```
 
-Because SwitchLingua does not provide gold word-level Language IDs, `src/switchlingua_labels.py` creates automatic weak LID labels using Unicode-script rules and a pair-restricted Lingua detector. Space-delimited languages use whitespace and punctuation boundaries; Chinese and Cantonese Han spans use `jieba` word segmentation before the shared XLM-R fast tokenizer. Each pre-token's LID is copied to all of its XLM-R subwords using `word_ids()`.
+Because SwitchLingua does not provide gold word-level Language IDs, `src/switchlingua_labels.py` creates automatic weak LID labels using Unicode-script rules and a pair-restricted Lingua detector. Space-delimited languages use whitespace and punctuation boundaries; Chinese and Cantonese Han spans use `jieba` word segmentation before the shared XLM-R fast tokenizer. Unicode combining marks remain attached to their base tokens, and each pre-token's LID is copied to all of its XLM-R subwords using `word_ids()`.
+
+The preprocessing pipeline supports two punctuation policies:
+
+- `keep`: preserve punctuation and symbol tokens before subword tokenization.
+- `drop`: remove punctuation and symbol tokens before tokenization and predictive-label generation.
+
+Applying the policy before label generation ensures that both switch and duration targets correspond to the same token sequence seen by the model.
 
 ## Predictive Labels
 
@@ -98,7 +104,7 @@ The tests verify that:
 - the same check fails with a bidirectional mask; and
 - a small XLM-R model cannot access future tokens when using the causal mask.
 
-## Naive Baseline
+## Punctuation Ablation: Naive Baseline
 
 The baseline estimates:
 
@@ -108,7 +114,9 @@ P(switch at t+1 | current token ID at t)
 
 It learns token statistics from the training split, selects its threshold on validation data, and evaluates once on the test split.
 
-The formal 15-pair run uses at most 500 training rows, 150 validation rows, and 150 test rows per pair, with up to two utterances from each row:
+Both 14-pair runs use at most 500 training rows, 150 validation rows, and 150 test rows per pair, with up to two utterances from each row. The random seed and all other settings are held constant.
+
+Keep punctuation:
 
 ```bash
 python -m src.naive_baseline \
@@ -117,31 +125,44 @@ python -m src.naive_baseline \
   --validation-rows-per-pair 150 \
   --test-rows-per-pair 150 \
   --utterances-per-row 2 \
-  --output results/naive_baseline_15pairs.json
+  --punctuation-mode keep \
+  --output results/naive_baseline_14pairs_keep.json
 ```
 
-| Test set | Anticipatory F1 | Precision | Recall | Duration accuracy |
-|---|---:|---:|---:|---:|
-| Overall | **0.4643** | 0.4746 | 0.4545 | 0.5059 |
-| Arabic–English | 0.5509 | 0.5298 | 0.5736 | 0.4703 |
-| Cantonese–English | 0.3956 | 0.3532 | 0.4495 | 0.4794 |
-| Chinese–English | 0.5752 | 0.4763 | 0.7261 | 0.5607 |
-| French–English | 0.3909 | 0.5064 | 0.3183 | 0.4948 |
-| German–English | 0.4724 | 0.5400 | 0.4199 | 0.5046 |
-| German–French | 0.4467 | 0.4809 | 0.4170 | 0.5193 |
-| Hindi–English | 0.2784 | 0.2080 | 0.4208 | 0.5830 |
-| Italian–English | 0.4583 | 0.5633 | 0.3863 | 0.5102 |
-| Japanese–English | 0.5966 | 0.4934 | 0.7544 | 0.6658 |
-| Korean–English | 0.6363 | 0.6134 | 0.6608 | 0.5636 |
-| Malay–English | 0.4101 | 0.4850 | 0.3553 | 0.4408 |
-| Philippines–English | 0.4046 | 0.4237 | 0.3873 | 0.4778 |
-| Russian–English | 0.5142 | 0.4477 | 0.6037 | 0.4548 |
-| Spanish–English | 0.4736 | 0.5274 | 0.4298 | 0.5102 |
-| Vietnamese–English | 0.4991 | 0.5043 | 0.4939 | 0.5061 |
+Drop punctuation by changing the last two options to:
 
-The validation-selected threshold is **0.30**. The overall test switch rate is **8.81%**, so raw accuracy is not used as the main metric. The standard deviation of pair-level Anticipatory F1 is **0.0898**, which is the initial universality measure.
+```bash
+  --punctuation-mode drop \
+  --output results/naive_baseline_14pairs_drop.json
+```
 
-Full results are stored in `results/naive_baseline_15pairs.json`.
+| Metric | Keep | Drop | Drop − Keep |
+|---|---:|---:|---:|
+| Anticipatory F1 | **0.4763** | 0.3403 | -0.1360 |
+| Duration accuracy | **0.5003** | 0.4952 | -0.0050 |
+| Switch rate | 0.0752 | 0.0884 | +0.0133 |
+| Universality σ | 0.0894 | **0.0822** | -0.0072 |
+
+Removing punctuation lowers Anticipatory F1 by 0.1360 while leaving the number of positive switch examples unchanged at 8,937. The test sequence becomes shorter, so the measured switch rate rises. The lower pair-level standard deviation after punctuation removal does not compensate for the much lower overall F1.
+
+The machine-readable summary is stored in `results/punctuation_ablation_summary.csv`, and the presentation figure is stored in `docs/figures/punctuation_ablation.png`. Recreate the figure with:
+
+```bash
+PYTHONPATH=. python examples/plot_punctuation_ablation.py
+```
+
+## LID Validation Audit
+
+The audit samples three validation utterances from each of the 14 language pairs. Manual gold labels were added for 849 pre-token rows and compared with the automatic weak labels.
+
+| Audit metric | Result |
+|---|---:|
+| Token LID accuracy | **0.9423** (800/849) |
+| Switch-boundary F1 | **0.6102** |
+| Switch-boundary precision | 0.5047 |
+| Switch-boundary recall | 0.7714 |
+
+The token-level accuracy is high, but the lower boundary F1 shows that individual LID errors can create or remove switch boundaries. Same-script pairs and romanized Hindi remain the main failure modes. The completed annotations and detailed per-pair metrics are stored in `results/lid_audit_14pairs.csv` and `results/lid_audit_14pairs_metrics.json`.
 
 ## Setup and Tests
 
@@ -155,7 +176,7 @@ PYTHONPATH=. pytest -q
 Expected result:
 
 ```text
-23 passed
+42 passed
 ```
 
 ## Limitations
@@ -163,20 +184,20 @@ Expected result:
 - The current LIDs are automatic weak labels rather than gold annotations.
 - Same-script pairs remain difficult to classify, especially for short words, names, and borrowings.
 - Chinese and Cantonese segmentation is automatic word segmentation rather than gold word-boundary annotation, and segmentation choices can change subword-based duration counts.
-- Punctuation may shift an estimated switch boundary.
+- Punctuation materially affects the naive current-token baseline, so later model comparisons must use one declared policy.
 - Cantonese–English and Chinese–English segmentation require further validation.
 - Duration is currently measured in XLM-R subword tokens.
 - Exact utterance overlap across splits should be audited before full-model training.
-- The formal baseline uses balanced per-pair row caps rather than every available row.
+- The baseline uses balanced per-pair row caps rather than every available row.
+- The 849-token LID audit is a targeted quality check, not a complete gold-label benchmark.
 
 The current metrics are initial engineering results and should not be presented as final gold-label benchmark results.
 
 ## Next Steps
 
-1. Manually audit word-level LID quality across all 15 language pairs.
-2. Improve same-script LID handling for short words, names, and borrowings.
+1. Improve same-script LID handling for short words, names, borrowings, and romanized text.
+2. Expand the manual LID audit beyond three utterances per pair.
 3. Validate Cantonese–English and Chinese–English segmentation and the use of subword-based duration labels.
 4. Audit and remove exact utterance overlap across data splits.
-5. Evaluate the baseline on larger or complete data splits.
-6. Train a causal multilingual transformer with switch and duration prediction heads.
-7. Compare pair-level Anticipatory F1 and performance variation across language pairs.
+5. Use one fixed punctuation policy for the mBERT and XLM-R comparison.
+6. Train the causal dual-head model and compare pair-level Anticipatory F1 and duration convergence.
