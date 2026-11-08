@@ -1,0 +1,169 @@
+{
+  "overall": {
+    "token_count": 849,
+    "token_correct": 800,
+    "token_lid_accuracy": 0.9422850412249706,
+    "switch_boundary_f1": 0.6101694915254237,
+    "switch_boundary_precision": 0.5046728971962616,
+    "switch_boundary_recall": 0.7714285714285715,
+    "switch_boundary_tp": 54,
+    "switch_boundary_fp": 53,
+    "switch_boundary_fn": 16
+  },
+  "by_language_pair": {
+    "Arabic-English": {
+      "token_count": 53,
+      "token_correct": 53,
+      "token_lid_accuracy": 1.0,
+      "switch_boundary_f1": 1.0,
+      "switch_boundary_precision": 1.0,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 3,
+      "switch_boundary_fp": 0,
+      "switch_boundary_fn": 0
+    },
+    "Cantonese-English": {
+      "token_count": 43,
+      "token_correct": 42,
+      "token_lid_accuracy": 0.9767441860465116,
+      "switch_boundary_f1": 0.888888888888889,
+      "switch_boundary_precision": 0.8,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 4,
+      "switch_boundary_fp": 1,
+      "switch_boundary_fn": 0
+    },
+    "Chinese-English": {
+      "token_count": 53,
+      "token_correct": 53,
+      "token_lid_accuracy": 1.0,
+      "switch_boundary_f1": 1.0,
+      "switch_boundary_precision": 1.0,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 2,
+      "switch_boundary_fp": 0,
+      "switch_boundary_fn": 0
+    },
+    "French-English": {
+      "token_count": 64,
+      "token_correct": 59,
+      "token_lid_accuracy": 0.921875,
+      "switch_boundary_f1": 0.28571428571428575,
+      "switch_boundary_precision": 0.18181818181818182,
+      "switch_boundary_recall": 0.6666666666666666,
+      "switch_boundary_tp": 2,
+      "switch_boundary_fp": 9,
+      "switch_boundary_fn": 1
+    },
+    "German-English": {
+      "token_count": 78,
+      "token_correct": 70,
+      "token_lid_accuracy": 0.8974358974358975,
+      "switch_boundary_f1": 0.3,
+      "switch_boundary_precision": 0.17647058823529413,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 3,
+      "switch_boundary_fp": 14,
+      "switch_boundary_fn": 0
+    },
+    "Hindi-English": {
+      "token_count": 63,
+      "token_correct": 50,
+      "token_lid_accuracy": 0.7936507936507936,
+      "switch_boundary_f1": 0.5833333333333334,
+      "switch_boundary_precision": 1.0,
+      "switch_boundary_recall": 0.4117647058823529,
+      "switch_boundary_tp": 7,
+      "switch_boundary_fp": 0,
+      "switch_boundary_fn": 10
+    },
+    "Italian-English": {
+      "token_count": 55,
+      "token_correct": 49,
+      "token_lid_accuracy": 0.8909090909090909,
+      "switch_boundary_f1": 0.30769230769230765,
+      "switch_boundary_precision": 0.2,
+      "switch_boundary_recall": 0.6666666666666666,
+      "switch_boundary_tp": 2,
+      "switch_boundary_fp": 8,
+      "switch_boundary_fn": 1
+    },
+    "Japanese-English": {
+      "token_count": 85,
+      "token_correct": 85,
+      "token_lid_accuracy": 1.0,
+      "switch_boundary_f1": 1.0,
+      "switch_boundary_precision": 1.0,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 3,
+      "switch_boundary_fp": 0,
+      "switch_boundary_fn": 0
+    },
+    "Korean-English": {
+      "token_count": 50,
+      "token_correct": 50,
+      "token_lid_accuracy": 1.0,
+      "switch_boundary_f1": 1.0,
+      "switch_boundary_precision": 1.0,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 3,
+      "switch_boundary_fp": 0,
+      "switch_boundary_fn": 0
+    },
+    "Malay-English": {
+      "token_count": 56,
+      "token_correct": 53,
+      "token_lid_accuracy": 0.9464285714285714,
+      "switch_boundary_f1": 0.6,
+      "switch_boundary_precision": 0.42857142857142855,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 3,
+      "switch_boundary_fp": 4,
+      "switch_boundary_fn": 0
+    },
+    "Philippines-English": {
+      "token_count": 65,
+      "token_correct": 63,
+      "token_lid_accuracy": 0.9692307692307692,
+      "switch_boundary_f1": 0.8333333333333333,
+      "switch_boundary_precision": 0.7142857142857143,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 10,
+      "switch_boundary_fp": 4,
+      "switch_boundary_fn": 0
+    },
+    "Russian-English": {
+      "token_count": 39,
+      "token_correct": 39,
+      "token_lid_accuracy": 1.0,
+      "switch_boundary_f1": 1.0,
+      "switch_boundary_precision": 1.0,
+      "switch_boundary_recall": 1.0,
+      "switch_boundary_tp": 5,
+      "switch_boundary_fp": 0,
+      "switch_boundary_fn": 0
+    },
+    "Spanish-English": {
+      "token_count": 88,
+      "token_correct": 81,
+      "token_lid_accuracy": 0.9204545454545454,
+      "switch_boundary_f1": 0.26666666666666666,
+      "switch_boundary_precision": 0.18181818181818182,
+      "switch_boundary_recall": 0.5,
+      "switch_boundary_tp": 2,
+      "switch_boundary_fp": 9,
+      "switch_boundary_fn": 2
+    },
+    "Vietnamese-English": {
+      "token_count": 57,
+      "token_correct": 53,
+      "token_lid_accuracy": 0.9298245614035088,
+      "switch_boundary_f1": 0.6250000000000001,
+      "switch_boundary_precision": 0.5555555555555556,
+      "switch_boundary_recall": 0.7142857142857143,
+      "switch_boundary_tp": 5,
+      "switch_boundary_fp": 4,
+      "switch_boundary_fn": 2
+    }
+  }
+}
