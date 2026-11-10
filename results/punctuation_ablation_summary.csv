@@ -1,5 +1,5 @@
-Metric,Keep,Drop,Drop - Keep
-Anticipatory F1,0.476261,0.340264,-0.135997
-Duration Accuracy,0.500280,0.495244,-0.005035
-Switch Rate,0.075172,0.088426,0.013253
-Universality σ,0.089411,0.082249,-0.007162
+Metric,Keep,Drop,Neutral,Drop - Keep,Neutral - Keep
+Anticipatory F1,0.476261,0.340264,0.488323,-0.135997,0.012062
+Duration Accuracy,0.500280,0.495244,0.574801,-0.005035,0.074521
+Switch Rate,0.075172,0.088426,0.088426,0.013253,0.013254
+Universality σ,0.089411,0.082249,0.090116,-0.007162,0.000705

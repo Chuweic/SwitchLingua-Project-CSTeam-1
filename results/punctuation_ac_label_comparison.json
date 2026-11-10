@@ -1,0 +1,80 @@
+{
+  "definition": {
+    "A": "keep punctuation and inherit a nearby lexical LID",
+    "C": "keep punctuation as neutral; ignore targets into neutral spans and anchor the lexical boundary on the final neutral token",
+    "duration_C": "count lexical subwords only; neutral punctuation does not end or lengthen a language burst"
+  },
+  "audit_scope": {
+    "language_pairs": 14,
+    "utterances": 42,
+    "manually_labeled_lexical_tokens": 849
+  },
+  "approaches": {
+    "keep": {
+      "switch_labels": {
+        "support": 914,
+        "positive_support": 70,
+        "predicted_positive_support": 107,
+        "precision": 0.5046728971962616,
+        "recall": 0.7714285714285715,
+        "f1": 0.6101694915254237,
+        "tp": 54,
+        "fp": 53,
+        "fn": 16
+      },
+      "near_punctuation_switch_labels": {
+        "support": 171,
+        "positive_support": 33,
+        "predicted_positive_support": 33,
+        "precision": 0.8787878787878788,
+        "recall": 0.8787878787878788,
+        "f1": 0.8787878787878788,
+        "tp": 29,
+        "fp": 4,
+        "fn": 4
+      },
+      "duration_labels_at_gold_switches": {
+        "support": 54,
+        "correct": 50,
+        "accuracy": 0.9259259259259259
+      }
+    },
+    "neutral": {
+      "switch_labels": {
+        "support": 807,
+        "positive_support": 70,
+        "predicted_positive_support": 107,
+        "precision": 0.5046728971962616,
+        "recall": 0.7714285714285715,
+        "f1": 0.6101694915254237,
+        "tp": 54,
+        "fp": 53,
+        "fn": 16
+      },
+      "near_punctuation_switch_labels": {
+        "support": 64,
+        "positive_support": 33,
+        "predicted_positive_support": 33,
+        "precision": 0.8787878787878788,
+        "recall": 0.8787878787878788,
+        "f1": 0.8787878787878788,
+        "tp": 29,
+        "fp": 4,
+        "fn": 4
+      },
+      "duration_labels_at_gold_switches": {
+        "support": 54,
+        "correct": 50,
+        "accuracy": 0.9259259259259259
+      }
+    }
+  },
+  "automatic_A_vs_C": {
+    "shared_valid_switch_targets": 807,
+    "switch_value_changes_on_shared_targets": 0,
+    "keep_only_switch_targets": 107,
+    "neutral_only_switch_targets": 0,
+    "shared_switch_duration_targets": 107,
+    "duration_class_changes_on_shared_switches": 15
+  }
+}

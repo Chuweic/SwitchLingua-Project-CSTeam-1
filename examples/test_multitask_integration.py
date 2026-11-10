@@ -8,6 +8,7 @@ from transformers import XLMRobertaConfig, XLMRobertaModel
 
 from src.multitask_model import CausalMultitaskModel
 from src.switchlingua_labels import (
+    PUNCTUATION_MODES,
     load_fast_tokenizer,
     records_from_parquet,
 )
@@ -17,6 +18,12 @@ from src.streaming_dataloader import create_streaming_dataloader
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--pretrained", action="store_true")
+    parser.add_argument(
+        "--punctuation-mode",
+        choices=PUNCTUATION_MODES,
+        default="keep",
+        help="Use Approach A (keep), B (drop), or C (neutral).",
+    )
     args = parser.parse_args()
 
     # 1. Load real SwitchLingua examples.
@@ -28,7 +35,7 @@ def main():
         language_pairs=("Chinese-English", "Spanish-English"),
         max_rows_per_pair=5,
         max_utterances_per_row=2,
-        punctuation_mode="keep",
+        punctuation_mode=args.punctuation_mode,
     )
 
     # Select examples containing a switch within the first 128 tokens.
