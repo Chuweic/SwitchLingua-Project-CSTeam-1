@@ -39,12 +39,15 @@ data/processed/
 
 Because SwitchLingua does not provide gold word-level Language IDs, `src/switchlingua_labels.py` creates automatic weak LID labels using Unicode-script rules and a pair-restricted Lingua detector. Space-delimited languages use whitespace and punctuation boundaries; Chinese and Cantonese Han spans use `jieba` word segmentation before the shared XLM-R fast tokenizer. Unicode combining marks remain attached to their base tokens, and each pre-token's LID is copied to all of its XLM-R subwords using `word_ids()`.
 
-The preprocessing pipeline supports two punctuation policies:
+The preprocessing pipeline supports three punctuation policies:
 
-- `keep`: preserve punctuation and symbol tokens before subword tokenization.
-- `drop`: remove punctuation and symbol tokens before tokenization and predictive-label generation.
+- `keep` (Approach A, default): preserve punctuation and let it inherit a nearby lexical LID.
+- `drop` (Approach B): remove punctuation and symbols before tokenization and target generation.
+- `neutral` (Approach C): preserve punctuation as model input, assign it the language-independent LID `neutral`, and exclude it from linguistic switch and duration calculations.
 
 Applying the policy before label generation ensures that both switch and duration targets correspond to the same token sequence seen by the model.
+
+For Approach C, a target immediately before a neutral punctuation span is ignored. The final neutral token before the next lexical token anchors the boundary by comparing the nearest non-neutral LIDs on both sides. Thus `en , ar` produces one switch target at the comma rather than artificial `en -> neutral` and `neutral -> ar` switches. Neutral punctuation does not contribute to the upcoming duration length.
 
 ## Predictive Labels
 
@@ -136,20 +139,55 @@ Drop punctuation by changing the last two options to:
   --output results/naive_baseline_14pairs_drop.json
 ```
 
-| Metric | Keep | Drop | Drop − Keep |
-|---|---:|---:|---:|
-| Anticipatory F1 | **0.4763** | 0.3403 | -0.1360 |
-| Duration accuracy | **0.5003** | 0.4952 | -0.0050 |
-| Switch rate | 0.0752 | 0.0884 | +0.0133 |
-| Universality σ | 0.0894 | **0.0822** | -0.0072 |
+Keep punctuation with a neutral LID by changing them to:
+
+```bash
+  --punctuation-mode neutral \
+  --output results/naive_baseline_14pairs_neutral.json
+```
+
+| Metric | A: Keep/inherit | B: Drop | C: Keep/neutral | C − A |
+|---|---:|---:|---:|---:|
+| Anticipatory F1 | 0.4763 | 0.3403 | **0.4883** | +0.0121 |
+| Duration accuracy | 0.5003 | 0.4952 | **0.5748** | +0.0745 |
+| Switch rate | 0.0752 | 0.0884 | 0.0884 | +0.0133 |
+| Universality σ | **0.0894** | 0.0822 | 0.0901 | +0.0007 |
 
 Removing punctuation lowers Anticipatory F1 by 0.1360 while leaving the number of positive switch examples unchanged at 8,937. The test sequence becomes shorter, so the measured switch rate rises. The lower pair-level standard deviation after punctuation removal does not compensate for the much lower overall F1.
+
+Approach C improves the naive Anticipatory F1 by 0.0121 and duration accuracy by 0.0745 relative to A. It retains punctuation as an input cue while removing targets that predict a linguistic switch into punctuation. Because C changes the valid target set and the duration definition, these results are engineering evidence for an A/C model comparison rather than a final claim that C is universally better.
+
+The completed 849-token manual audit gives the same overall boundary F1 for A and C (0.6102) and the same near-punctuation boundary F1 (0.8788). C removes 107 targets that point into punctuation and changes 15 shared switch-duration classes without reducing audited boundary quality. Recreate the audit comparison with:
+
+```bash
+PYTHONPATH=. python examples/compare_punctuation_policies.py
+```
+
+The detailed outputs are stored in `results/punctuation_ac_label_comparison.json` and `results/punctuation_ac_label_comparison.csv`.
 
 The machine-readable summary is stored in `results/punctuation_ablation_summary.csv`, and the presentation figure is stored in `docs/figures/punctuation_ablation.png`. Recreate the figure with:
 
 ```bash
 PYTHONPATH=. python examples/plot_punctuation_ablation.py
 ```
+
+### Person 3 training handoff
+
+Approach A remains the default while existing training continues. Person 3 can select the policy when constructing records:
+
+```python
+records_from_parquet(..., punctuation_mode="keep")     # Approach A
+records_from_parquet(..., punctuation_mode="neutral")  # Approach C
+```
+
+The real-data integration example exposes the same choice:
+
+```bash
+PYTHONPATH=. python examples/test_multitask_integration.py --punctuation-mode keep
+PYTHONPATH=. python examples/test_multitask_integration.py --punctuation-mode neutral
+```
+
+Since C improves the naive F1 and duration accuracy without lowering manual boundary F1, Person 3 should run the final A/C model comparison after the current A run finishes. All other seeds, row caps, splits, and hyperparameters should remain fixed.
 
 ## LID Validation Audit
 
@@ -176,7 +214,7 @@ PYTHONPATH=. pytest -q
 Expected result:
 
 ```text
-42 passed
+61 passed
 ```
 
 ## Limitations
@@ -199,5 +237,5 @@ The current metrics are initial engineering results and should not be presented 
 2. Expand the manual LID audit beyond three utterances per pair.
 3. Validate Cantonese–English and Chinese–English segmentation and the use of subword-based duration labels.
 4. Audit and remove exact utterance overlap across data splits.
-5. Use one fixed punctuation policy for the mBERT and XLM-R comparison.
+5. Compare Approach A (`keep`) and Approach C (`neutral`) with fixed seeds and hyperparameters, then declare one punctuation policy for the final mBERT and XLM-R comparison.
 6. Train the causal dual-head model and compare pair-level Anticipatory F1 and duration convergence.
