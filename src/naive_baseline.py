@@ -149,7 +149,10 @@ def main() -> None:
         "--punctuation-mode",
         choices=PUNCTUATION_MODES,
         default="keep",
-        help="Keep punctuation tokens or drop them before tokenization and label generation.",
+        help=(
+            "Approach A: keep/inherit punctuation LIDs; Approach B: drop "
+            "punctuation; Approach C: keep punctuation with a neutral LID."
+        ),
     )
     args = parser.parse_args()
 

@@ -6,8 +6,9 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 IGNORE_INDEX = -100
 NON_SWITCH_DURATION = -1
+NEUTRAL_LID = "neutral"
 DEFAULT_TOKENIZER = "xlm-roberta-base"
-PUNCTUATION_MODES = ("keep", "drop")
+PUNCTUATION_MODES = ("keep", "drop", "neutral")
 SELECTED_LANGUAGE_PAIRS = (
     "Arabic-English",
     "Cantonese-English",
@@ -100,6 +101,68 @@ def _get_word_ids(encoding: Any) -> List[Optional[int]]:
     return list(word_ids_method())
 
 
+def build_predictive_labels(
+    language_ids: Sequence[str],
+) -> Tuple[List[int], List[int]]:
+    """Build switch and duration targets for an aligned language sequence.
+
+    The returned lists have the same length as ``language_ids``.  A neutral
+    span is retained in the sequence, but only its final position can receive
+    a target: that target compares the closest lexical languages on both
+    sides.  Leading/trailing neutral spans and positions immediately before a
+    neutral token are ignored.
+    """
+
+    if any(not isinstance(language_id, str) or not language_id.strip() for language_id in language_ids):
+        raise ValueError("language_ids must contain non-empty strings")
+
+    switch_labels = [IGNORE_INDEX] * len(language_ids)
+    duration_labels = [IGNORE_INDEX] * len(language_ids)
+
+    def previous_lexical_language(index: int) -> Optional[str]:
+        return next(
+            (
+                language_id
+                for language_id in reversed(language_ids[:index])
+                if language_id != NEUTRAL_LID
+            ),
+            None,
+        )
+
+    def lexical_burst_length(start_index: int, language: str) -> int:
+        burst_length = 0
+        for burst_language in language_ids[start_index:]:
+            if burst_language == NEUTRAL_LID:
+                continue
+            if burst_language != language:
+                break
+            burst_length += 1
+        return burst_length
+
+    for index, (current_language, next_language) in enumerate(
+        zip(language_ids, language_ids[1:])
+    ):
+        if next_language == NEUTRAL_LID:
+            continue
+
+        comparison_language = current_language
+        if current_language == NEUTRAL_LID:
+            comparison_language = previous_lexical_language(index)
+            if comparison_language is None:
+                continue
+
+        is_switch = comparison_language != next_language
+        switch_labels[index] = int(is_switch)
+        if not is_switch:
+            duration_labels[index] = NON_SWITCH_DURATION
+            continue
+
+        burst_length = lexical_burst_length(index + 1, next_language)
+        duration_labels[index] = _duration_class(burst_length)
+
+    return switch_labels, duration_labels
+
+
 def encode_and_label(
     tokenizer: Any,
     words: Sequence[str],
@@ -112,7 +175,14 @@ def encode_and_label(
 
     ``word_language_ids`` supplies the language annotation for each input word;
     the tokenizer only supplies the word-to-sub-word alignment.  Duration is
-    measured in consecutive sub-words in the upcoming language burst.
+    measured in consecutive lexical sub-words in the upcoming language burst.
+
+    Neutral punctuation is retained as model input but is not treated as a
+    language.  A target immediately before neutral punctuation is ignored.  At
+    the final neutral token before the next lexical token, the label compares
+    the nearest lexical languages on both sides.  This keeps a boundary such as
+    ``en , ar`` at the comma without creating artificial ``en -> neutral`` and
+    ``neutral -> ar`` switches.
     """
 
     _validate_inputs(words, word_language_ids)
@@ -153,26 +223,15 @@ def encode_and_label(
 
     switch_labels = [IGNORE_INDEX] * sequence_length
     duration_labels = [IGNORE_INDEX] * sequence_length
-
-    for valid_index, position in enumerate(valid_positions[:-1]):
-        next_position = valid_positions[valid_index + 1]
-        current_language = subword_language_ids[position]
-        next_language = subword_language_ids[next_position]
-        assert current_language is not None
-        assert next_language is not None
-
-        is_switch = current_language != next_language
-        switch_labels[position] = int(is_switch)
-        if not is_switch:
-            duration_labels[position] = NON_SWITCH_DURATION
-            continue
-
-        burst_length = 0
-        for burst_position in valid_positions[valid_index + 1 :]:
-            if subword_language_ids[burst_position] != next_language:
-                break
-            burst_length += 1
-        duration_labels[position] = _duration_class(burst_length)
+    valid_languages = [
+        str(subword_language_ids[position]) for position in valid_positions
+    ]
+    valid_switch_labels, valid_duration_labels = build_predictive_labels(
+        valid_languages
+    )
+    for index, position in enumerate(valid_positions):
+        switch_labels[position] = valid_switch_labels[index]
+        duration_labels[position] = valid_duration_labels[index]
 
     result = dict(encoding)
     result.update(
@@ -240,7 +299,12 @@ def apply_punctuation_policy(
     *,
     mode: str = "keep",
 ) -> Tuple[List[str], List[str]]:
-    """Apply the controlled punctuation ablation to aligned word/LID lists."""
+    """Apply a keep, drop, or neutral policy to aligned word/LID lists.
+
+    ``neutral`` retains punctuation and symbol tokens as input while assigning
+    them a language-independent LID.  Internal punctuation in lexical tokens,
+    such as the apostrophe in ``l'homme``, keeps its original language.
+    """
 
     if mode not in PUNCTUATION_MODES:
         raise ValueError(
@@ -250,6 +314,11 @@ def apply_punctuation_policy(
         raise ValueError("words and word_language_ids must have the same length")
     if mode == "keep":
         return list(words), list(word_language_ids)
+    if mode == "neutral":
+        return list(words), [
+            NEUTRAL_LID if is_punctuation_or_symbol_token(word) else language_id
+            for word, language_id in zip(words, word_language_ids)
+        ]
 
     kept = [
         (word, language_id)
@@ -443,10 +512,12 @@ def records_from_parquet(
     seed: int = 42,
     punctuation_mode: str = "keep",
 ) -> List[Dict[str, Any]]:
-    """Convert a real split into records, optionally dropping punctuation.
+    """Convert a real split into records with a declared punctuation policy.
 
-    Punctuation is filtered before model tokenization and label generation so
-    switch and duration targets are always aligned with the actual input.
+    The punctuation policy is applied before model tokenization and label
+    generation so switch and duration targets are always aligned with the
+    actual input.  Neutral punctuation is kept in the input but excluded from
+    linguistic switch and duration calculations.
     """
 
     import pandas as pd
@@ -495,6 +566,9 @@ def records_from_parquet(
                     "lid_source": "automatic-weak-label",
                     "punctuation_mode": punctuation_mode,
                     "removed_punctuation_count": len(original_words) - len(words),
+                    "neutralized_punctuation_count": sum(
+                        language_id == NEUTRAL_LID for language_id in word_lids
+                    ),
                 }
             )
             records.append(record)

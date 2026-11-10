@@ -4,6 +4,7 @@ from src import switchlingua_labels
 
 IGNORE_INDEX = switchlingua_labels.IGNORE_INDEX
 NON_SWITCH_DURATION = switchlingua_labels.NON_SWITCH_DURATION
+NEUTRAL_LID = switchlingua_labels.NEUTRAL_LID
 
 
 class FakeEncoding(dict):
@@ -174,6 +175,119 @@ def test_keep_punctuation_returns_aligned_copies():
     assert kept_lids is not lids
 
 
+def test_neutral_punctuation_keeps_input_and_marks_only_symbol_tokens():
+    words = ["Bonjour", ",", "l'homme", "!", "😊"]
+    lids = ["fr", "fr", "fr", "fr", "fr"]
+
+    neutral_words, neutral_lids = switchlingua_labels.apply_punctuation_policy(
+        words,
+        lids,
+        mode="neutral",
+    )
+
+    assert neutral_words == words
+    assert neutral_lids == ["fr", NEUTRAL_LID, "fr", NEUTRAL_LID, NEUTRAL_LID]
+
+
+def test_neutral_punctuation_anchors_one_cross_language_switch():
+    words = ["hi", ",", "مرحبا"]
+    lids = ["en", NEUTRAL_LID, "ar"]
+
+    result = encode_and_label_impl(FakeTokenizer(), words, lids)
+
+    assert result["subword_language_ids"] == [
+        None,
+        "en",
+        NEUTRAL_LID,
+        "ar",
+        "ar",
+        None,
+    ]
+    assert result["switch_labels"] == [
+        IGNORE_INDEX,
+        IGNORE_INDEX,
+        1,
+        0,
+        IGNORE_INDEX,
+        IGNORE_INDEX,
+    ]
+    assert result["duration_labels"] == [
+        IGNORE_INDEX,
+        IGNORE_INDEX,
+        0,
+        NON_SWITCH_DURATION,
+        IGNORE_INDEX,
+        IGNORE_INDEX,
+    ]
+
+
+def test_neutral_punctuation_does_not_create_same_language_switch():
+    result = encode_and_label_impl(
+        FakeTokenizer(),
+        ["hi", ",", "yo"],
+        ["en", NEUTRAL_LID, "en"],
+    )
+
+    assert 1 not in result["switch_labels"]
+    comma_position = result["subword_language_ids"].index(NEUTRAL_LID)
+    assert result["switch_labels"][comma_position] == 0
+    assert result["duration_labels"][comma_position] == NON_SWITCH_DURATION
+
+
+def test_consecutive_neutral_punctuation_creates_only_one_boundary_target():
+    result = encode_and_label_impl(
+        FakeTokenizer(),
+        ["hi", ",", "!", "مرحبا"],
+        ["en", NEUTRAL_LID, NEUTRAL_LID, "ar"],
+    )
+
+    assert result["switch_labels"].count(1) == 1
+    neutral_positions = [
+        index
+        for index, language in enumerate(result["subword_language_ids"])
+        if language == NEUTRAL_LID
+    ]
+    assert result["switch_labels"][neutral_positions[0]] == IGNORE_INDEX
+    assert result["switch_labels"][neutral_positions[1]] == 1
+
+
+def test_leading_and_trailing_neutral_punctuation_are_ignored():
+    result = encode_and_label_impl(
+        FakeTokenizer(),
+        ["!", "hi", "."],
+        [NEUTRAL_LID, "en", NEUTRAL_LID],
+    )
+
+    neutral_positions = [
+        index
+        for index, language in enumerate(result["subword_language_ids"])
+        if language == NEUTRAL_LID
+    ]
+    assert all(result["switch_labels"][position] == IGNORE_INDEX for position in neutral_positions)
+
+
+def test_neutral_punctuation_is_not_counted_in_duration_burst():
+    result = encode_and_label_impl(
+        FakeTokenizer(),
+        ["hi", ",", "aa", "!", "bb", "?", "cc", ".", "dd", "yo"],
+        [
+            "en",
+            NEUTRAL_LID,
+            "ar",
+            NEUTRAL_LID,
+            "ar",
+            NEUTRAL_LID,
+            "ar",
+            NEUTRAL_LID,
+            "ar",
+            "en",
+        ],
+    )
+
+    first_switch = result["switch_labels"].index(1)
+    assert result["duration_labels"][first_switch] == 1
+
+
 def test_punctuation_policy_rejects_invalid_mode_and_misaligned_lids():
     with pytest.raises(ValueError, match="punctuation mode"):
         switchlingua_labels.apply_punctuation_policy(["hello"], ["en"], mode="other")
@@ -232,6 +346,40 @@ def test_parquet_adapter_applies_punctuation_mode_before_labeling(monkeypatch):
     assert records[0]["removed_punctuation_count"] == 2
     assert records[0]["punctuation_mode"] == "drop"
     assert 1 in records[0]["switch_labels"]
+
+
+def test_parquet_adapter_records_neutral_punctuation_metadata(monkeypatch):
+    pandas = pytest.importorskip("pandas")
+    table = pandas.DataFrame(
+        [
+            {
+                "row_id": 1,
+                "first_language": "Arabic",
+                "second_language": "English",
+                "utterances": ["مرحبا, hello!"],
+                "language_pair": "Arabic-English",
+            }
+        ]
+    )
+    monkeypatch.setattr(pandas, "read_parquet", lambda _: table)
+
+    records = switchlingua_labels.records_from_parquet(
+        "unused.parquet",
+        FakeTokenizer(),
+        punctuation_mode="neutral",
+    )
+
+    assert len(records) == 1
+    assert records[0]["words"] == ["مرحبا", ",", "hello", "!"]
+    assert records[0]["word_language_ids"] == [
+        "ar",
+        NEUTRAL_LID,
+        "en",
+        NEUTRAL_LID,
+    ]
+    assert records[0]["removed_punctuation_count"] == 0
+    assert records[0]["neutralized_punctuation_count"] == 2
+    assert records[0]["punctuation_mode"] == "neutral"
 
 
 def test_pair_restricted_lid_handles_script_distinct_text():

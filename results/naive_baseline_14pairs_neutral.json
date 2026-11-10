@@ -1,0 +1,206 @@
+{
+  "overall": {
+    "anticipatory_f1": 0.4883229477106475,
+    "precision": 0.4734187854591301,
+    "recall": 0.5041960389392414,
+    "accuracy": 0.906567855305339,
+    "support": 101068,
+    "positive_support": 8937,
+    "duration_accuracy": 0.5748013874902093,
+    "duration_support": 8937,
+    "switch_rate": 0.08842561443780425
+  },
+  "by_language_pair": {
+    "Arabic-English": {
+      "anticipatory_f1": 0.5550351288056206,
+      "precision": 0.5074946466809421,
+      "recall": 0.6124031007751938,
+      "accuracy": 0.930934205743366,
+      "support": 5502,
+      "positive_support": 387,
+      "duration_accuracy": 0.524547803617571,
+      "duration_support": 387,
+      "switch_rate": 0.0703380588876772
+    },
+    "Cantonese-English": {
+      "anticipatory_f1": 0.4138613861386139,
+      "precision": 0.3641114982578397,
+      "recall": 0.4793577981651376,
+      "accuracy": 0.9331224582015364,
+      "support": 8852,
+      "positive_support": 436,
+      "duration_accuracy": 0.5045871559633027,
+      "duration_support": 436,
+      "switch_rate": 0.04925440578400361
+    },
+    "Chinese-English": {
+      "anticipatory_f1": 0.562874251497006,
+      "precision": 0.4585365853658537,
+      "recall": 0.7286821705426356,
+      "accuracy": 0.9509628302731751,
+      "support": 8932,
+      "positive_support": 387,
+      "duration_accuracy": 0.6253229974160207,
+      "duration_support": 387,
+      "switch_rate": 0.043327362292879534
+    },
+    "French-English": {
+      "anticipatory_f1": 0.4581560283687943,
+      "precision": 0.5483870967741935,
+      "recall": 0.3934226552984166,
+      "accuracy": 0.8754280123919779,
+      "support": 6133,
+      "positive_support": 821,
+      "duration_accuracy": 0.5639464068209501,
+      "duration_support": 821,
+      "switch_rate": 0.1338659709766835
+    },
+    "German-English": {
+      "anticipatory_f1": 0.4824120603015075,
+      "precision": 0.5233644859813084,
+      "recall": 0.4474034620505992,
+      "accuracy": 0.859399375975039,
+      "support": 5128,
+      "positive_support": 751,
+      "duration_accuracy": 0.6058588548601864,
+      "duration_support": 751,
+      "switch_rate": 0.14645085803432137
+    },
+    "Hindi-English": {
+      "anticipatory_f1": 0.24557752341311134,
+      "precision": 0.17664670658682635,
+      "recall": 0.40273037542662116,
+      "accuracy": 0.8834405144694534,
+      "support": 6220,
+      "positive_support": 293,
+      "duration_accuracy": 0.6621160409556314,
+      "duration_support": 293,
+      "switch_rate": 0.047106109324758845
+    },
+    "Italian-English": {
+      "anticipatory_f1": 0.49629629629629624,
+      "precision": 0.5885797950219619,
+      "recall": 0.42902881536819637,
+      "accuracy": 0.8547008547008547,
+      "support": 5616,
+      "positive_support": 937,
+      "duration_accuracy": 0.575240128068303,
+      "duration_support": 937,
+      "switch_rate": 0.16684472934472935
+    },
+    "Japanese-English": {
+      "anticipatory_f1": 0.5959498553519769,
+      "precision": 0.5040783034257749,
+      "recall": 0.7287735849056604,
+      "accuracy": 0.9774622128987144,
+      "support": 18591,
+      "positive_support": 424,
+      "duration_accuracy": 0.7169811320754716,
+      "duration_support": 424,
+      "switch_rate": 0.022806734441396373
+    },
+    "Korean-English": {
+      "anticipatory_f1": 0.6172300981461286,
+      "precision": 0.5728744939271255,
+      "recall": 0.6690307328605201,
+      "accuracy": 0.9467697907188353,
+      "support": 6594,
+      "positive_support": 423,
+      "duration_accuracy": 0.6170212765957447,
+      "duration_support": 423,
+      "switch_rate": 0.06414922656960874
+    },
+    "Malay-English": {
+      "anticipatory_f1": 0.4244897959183674,
+      "precision": 0.4574780058651026,
+      "recall": 0.39593908629441626,
+      "accuracy": 0.8373076923076923,
+      "support": 5200,
+      "positive_support": 788,
+      "duration_accuracy": 0.5050761421319797,
+      "duration_support": 788,
+      "switch_rate": 0.15153846153846154
+    },
+    "Philippines-English": {
+      "anticipatory_f1": 0.4566642388929352,
+      "precision": 0.4369337979094077,
+      "recall": 0.4782608695652174,
+      "accuracy": 0.7595487510072522,
+      "support": 6205,
+      "positive_support": 1311,
+      "duration_accuracy": 0.5659801678108314,
+      "duration_support": 1311,
+      "switch_rate": 0.2112812248186946
+    },
+    "Russian-English": {
+      "anticipatory_f1": 0.5342163355408389,
+      "precision": 0.44731977818853974,
+      "recall": 0.663013698630137,
+      "accuracy": 0.9244945428520308,
+      "support": 5589,
+      "positive_support": 365,
+      "duration_accuracy": 0.5863013698630137,
+      "duration_support": 365,
+      "switch_rate": 0.06530685274646628
+    },
+    "Spanish-English": {
+      "anticipatory_f1": 0.5237388724035609,
+      "precision": 0.5805921052631579,
+      "recall": 0.47702702702702704,
+      "accuracy": 0.8869320183163085,
+      "support": 5678,
+      "positive_support": 740,
+      "duration_accuracy": 0.577027027027027,
+      "duration_support": 740,
+      "switch_rate": 0.13032758013384996
+    },
+    "Vietnamese-English": {
+      "anticipatory_f1": 0.5311622683885457,
+      "precision": 0.5214994487320838,
+      "recall": 0.5411899313501144,
+      "accuracy": 0.877709431751611,
+      "support": 6828,
+      "positive_support": 874,
+      "duration_accuracy": 0.5434782608695652,
+      "duration_support": 874,
+      "switch_rate": 0.1280023432923257
+    }
+  },
+  "universality_std": 0.09011621418822097,
+  "threshold": 0.28,
+  "definition": "P(switch at t+1 | current token_id at t), trained on train only",
+  "run": {
+    "created_at": "2026-11-10T23:24:04.971804+00:00",
+    "tokenizer": "xlm-roberta-base",
+    "language_pairs": [
+      "Arabic-English",
+      "Cantonese-English",
+      "Chinese-English",
+      "French-English",
+      "German-English",
+      "Hindi-English",
+      "Italian-English",
+      "Japanese-English",
+      "Korean-English",
+      "Malay-English",
+      "Philippines-English",
+      "Russian-English",
+      "Spanish-English",
+      "Vietnamese-English"
+    ],
+    "weak_lid_labels": true,
+    "punctuation_mode": "neutral",
+    "seed": 42,
+    "rows_per_pair": {
+      "train": 500,
+      "validation": 150,
+      "test": 150
+    },
+    "utterances_per_row": 2,
+    "record_counts": {
+      "train": 12267,
+      "validation": 3728,
+      "test": 3727
+    }
+  }
+}
