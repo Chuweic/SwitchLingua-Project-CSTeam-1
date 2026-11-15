@@ -1,8 +1,8 @@
 """Summarize ``src.train`` runs: comparison table and convergence figure.
 
-Reads every ``results/train_*.json`` file, writes
-``results/training_comparison.csv``, and plots training loss and validation
-Anticipatory F1 to ``docs/figures/training_convergence.png``.
+Reads every ``results/train_*.json`` file (or another ``--pattern``), writes
+``results/training_comparison.csv``, and plots training loss, validation loss,
+and validation Anticipatory F1 to ``docs/figures/training_convergence.png``.
 """
 
 import argparse
@@ -57,6 +57,7 @@ def build_table(runs, results_dir):
             "Cross-eval labels": cross["label_punctuation_mode"] if cross else None,
             "Cross-eval F1": cross["overall"]["anticipatory_f1"] if cross else None,
             "Cross-eval Duration Accuracy": cross["overall"]["duration_accuracy"] if cross else None,
+            "Epochs": len(run["history"]["epochs"]),
             "Best epoch": run["history"]["best_epoch"],
             "Threshold": run["threshold"],
             "Learning rate": f"{run['run']['hyperparameters']['learning_rate']:g}",
@@ -67,7 +68,7 @@ def build_table(runs, results_dir):
 
 
 def plot_convergence(runs, output):
-    fig, (loss_ax, f1_ax) = plt.subplots(1, 2, figsize=(12, 4.6), dpi=200)
+    fig, (loss_ax, validation_ax, f1_ax) = plt.subplots(1, 3, figsize=(16, 4.6), dpi=200)
     for _, run in runs:
         backbone, mode, label = _label(run)
         style = dict(color=BACKBONE_COLOR.get(backbone, "#59A14F"), linestyle=MODE_STYLE.get(mode, "-"), linewidth=2)
@@ -75,6 +76,13 @@ def plot_convergence(runs, output):
         epochs = run["history"]["epochs"]
         if steps:
             loss_ax.plot([entry["step"] for entry in steps], [entry["train_loss"] for entry in steps], label=label, **style)
+        validation_ax.plot(
+            [entry["epoch"] for entry in epochs],
+            [entry["validation_loss"] for entry in epochs],
+            marker="o",
+            label=label,
+            **style,
+        )
         f1_ax.plot(
             [entry["epoch"] for entry in epochs],
             [entry["validation_anticipatory_f1"] for entry in epochs],
@@ -86,11 +94,15 @@ def plot_convergence(runs, output):
     loss_ax.set_title("Training loss (switch + duration)", fontsize=12, fontweight="bold", pad=10)
     loss_ax.set_xlabel("Optimizer step")
     loss_ax.set_ylabel("Loss")
+    validation_ax.set_title("Validation loss", fontsize=12, fontweight="bold", pad=10)
+    validation_ax.set_xlabel("Epoch")
+    validation_ax.set_ylabel("Loss")
     f1_ax.set_title("Validation Anticipatory F1", fontsize=12, fontweight="bold", pad=10)
     f1_ax.set_xlabel("Epoch")
     f1_ax.set_ylabel("F1 at validation-selected threshold")
-    f1_ax.xaxis.get_major_locator().set_params(integer=True)
-    for ax in (loss_ax, f1_ax):
+    for ax in (validation_ax, f1_ax):
+        ax.xaxis.get_major_locator().set_params(integer=True)
+    for ax in (loss_ax, validation_ax, f1_ax):
         ax.grid(axis="y", color="#D9D9D9", linewidth=0.8, alpha=0.8)
         ax.set_axisbelow(True)
         ax.spines[["top", "right"]].set_visible(False)
@@ -104,6 +116,7 @@ def plot_convergence(runs, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default=str(REPO_ROOT / "results"))
+    parser.add_argument("--pattern", default="train_*.json", help="Which result files to include.")
     parser.add_argument("--output-csv", default=None)
     parser.add_argument("--figure", default=str(REPO_ROOT / "docs" / "figures" / "training_convergence.png"))
     args = parser.parse_args()
@@ -111,10 +124,10 @@ def main():
     results_dir = Path(args.results_dir)
     runs = [
         (path, json.loads(path.read_text(encoding="utf-8")))
-        for path in sorted(results_dir.glob("train_*.json"))
+        for path in sorted(results_dir.glob(args.pattern))
     ]
     if not runs:
-        raise SystemExit(f"no train_*.json files found in {results_dir}; run src.train first")
+        raise SystemExit(f"no {args.pattern} files found in {results_dir}; run src.train first")
 
     table = build_table(runs, results_dir)
     output_csv = Path(args.output_csv) if args.output_csv else results_dir / "training_comparison.csv"

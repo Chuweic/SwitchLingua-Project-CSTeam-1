@@ -275,9 +275,9 @@
       {
         "step": 400,
         "epoch": 2,
-        "train_loss": 0.3696230435371399,
-        "train_switch_loss": 0.061082971096038816,
-        "train_duration_loss": 0.3085400724411011
+        "train_loss": 1.1550720110535622,
+        "train_switch_loss": 0.1908842846751213,
+        "train_duration_loss": 0.964187726378441
       },
       {
         "step": 450,
@@ -331,9 +331,9 @@
       {
         "step": 800,
         "epoch": 3,
-        "train_loss": 0.6815811514854431,
-        "train_switch_loss": 0.1140684124827385,
-        "train_duration_loss": 0.5675127410888672
+        "train_loss": 1.0649705491960049,
+        "train_switch_loss": 0.1782318945042789,
+        "train_duration_loss": 0.886738657951355
       },
       {
         "step": 850,
@@ -384,7 +384,8 @@
         "train_switch_loss": 0.17753169998526575,
         "train_duration_loss": 0.8857072556018829
       }
-    ]
+    ],
+    "step_log_note": "Step-window losses at steps [400, 800] were rescaled after the run: the logger reset its window at each epoch start but divided by log_every. Epoch-level losses and all evaluation metrics were unaffected."
   },
   "cross_eval": {
     "overall": {

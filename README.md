@@ -214,6 +214,26 @@ PYTHONPATH=. python examples/compare_training_runs.py
 
 This writes `results/training_comparison.csv` and `docs/figures/training_convergence.png`. mBERT records are built with the mBERT tokenizer, so its subword-based duration bins differ slightly from XLM-R's.
 
+### Training results
+
+All runs use the 14 pairs, the baseline row caps (500 / 150 / 150 rows per pair), seed 42, batch size 32, and a maximum length of 128. The learning rate 5e-5 was selected from {2e-5, 3e-5, 5e-5} by validation Anticipatory F1 on XLM-R with Approach A (`results/learning_rate_search.csv`).
+
+| Backbone | Approach | Epochs (best) | Anticipatory F1 | Duration accuracy | Universality σ |
+|---|---|---:|---:|---:|---:|
+| Naive baseline | A: keep | – | 0.4763 | 0.5003 | 0.0894 |
+| Naive baseline | C: neutral | – | 0.4883 | 0.5748 | 0.0901 |
+| XLM-R | A: keep | 3 (3) | 0.5385 | 0.5691 | 0.0853 |
+| mBERT | A: keep | 3 (3) | 0.5813 | 0.5874 | 0.0762 |
+| XLM-R | C: neutral | 3 (3) | 0.5715 | 0.6180 | 0.0814 |
+| mBERT | C: neutral | 3 (3) | **0.6079** | 0.6111 | 0.0683 |
+| XLM-R | C: neutral | 8 (7) | 0.6018 | 0.6102 | 0.0747 |
+| mBERT | C: neutral | 8 (5) | 0.6008 | 0.5806 | **0.0677** |
+
+**Punctuation policy.** Models trained with Approach C match or beat models trained with Approach A on switch F1 when both are scored on the same labels (XLM-R: 0.5466 vs 0.5385 on A's labels, 0.5715 vs 0.5531 on C's labels; mBERT: 0.5823 vs 0.5813 and 0.6079 vs 0.5989). Duration accuracy is higher for each model on its own labels because the two policies define segment length differently. Approach C is the declared policy for the remaining experiments (`results/punctuation_ac_model_comparison.csv`).
+
+**Backbone and convergence.** After 3 epochs mBERT leads XLM-R by about 0.04 F1, but the 8-epoch runs show this is a difference in convergence speed: mBERT's validation F1 plateaus at epoch 3, while XLM-R keeps improving until epoch 7 and reaches the same test F1 (0.6018 vs 0.6008). Both backbones level off near 0.60. Validation loss rises after epoch 2–3 for both, driven by the duration head (mBERT's validation duration loss grows from 0.83 to 1.69 by epoch 8), so the best epoch for switch F1 is later than the best epoch for duration. mBERT trains faster (about 3 minutes per epoch on a T4 versus 4) and has the lower pair-level spread.
+
+Each configuration was run with one seed, so differences below roughly 0.01 F1 should not be read as rankings. mBERT and XLM-R are scored on their own subword positions (97,282 and 100,626 test targets under Approach C), and the naive baseline rows use the XLM-R tokenizer. Per-epoch curves are in `results/convergence_curves.csv`, with figures in `docs/figures/training_convergence.png` (3 epochs) and `docs/figures/training_convergence_8ep.png` (8 epochs).
 ### Person 4 final analysis
 
 Generate the Person 4 model comparison, pair-level universality analysis, CSV summaries, and report/slide figures with:
@@ -249,7 +269,7 @@ PYTHONPATH=. pytest -q
 Expected result:
 
 ```text
-68 passed
+69 passed
 ```
 
 ## Limitations
@@ -272,5 +292,5 @@ The current metrics are initial engineering results and should not be presented 
 2. Expand the manual LID audit beyond three utterances per pair.
 3. Validate Cantonese–English and Chinese–English segmentation and the use of subword-based duration labels.
 4. Audit and remove exact utterance overlap across data splits.
-5. Replace the provisional three-epoch results with the eight-epoch neutral runs and regenerate the Person 4 outputs.
-6. Declare Approach C or A only after the final fixed-seed comparison, then report pair-level Anticipatory F1, duration accuracy, and universality σ together.
+5. Regenerate the Person 4 outputs from the eight-epoch neutral runs now stored in `results/`.
+6. Repeat the backbone comparison with several seeds, and select the duration head's epoch separately or lower its loss weight to limit duration overfitting.

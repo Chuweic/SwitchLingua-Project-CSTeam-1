@@ -215,10 +215,10 @@ def train_model(
     step = 0
     started = time.time()
 
+    window = {"loss": 0.0, "switch_loss": 0.0, "duration_loss": 0.0}
     for epoch in range(1, epochs + 1):
         model.train()
-        running = {"loss": 0.0, "switch_loss": 0.0, "duration_loss": 0.0}
-        window = dict(running)
+        running = {key: 0.0 for key in window}
         for batch in train_loader:
             outputs = model(
                 input_ids=batch["input_ids"].to(device),

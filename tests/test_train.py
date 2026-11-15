@@ -102,3 +102,20 @@ def test_training_learns_toy_task_and_reports_by_pair():
     assert set(result["by_language_pair"]) == {"Arabic-English", "Spanish-English"}
     assert result["universality_std"] == 0.0
     json.dumps(result)  # the result must be directly serializable
+
+
+def test_step_history_averages_full_windows_across_epochs():
+    records = make_records("Spanish-English", 64)  # 8 steps per epoch
+    history = train_model(
+        tiny_model(),
+        loader(records),
+        loader(records[:8]),
+        device=torch.device("cpu"),
+        epochs=3,
+        learning_rate=1e-3,
+        log_every=3,  # windows straddle the epoch boundaries at steps 8 and 16
+    )
+    assert [entry["step"] for entry in history["steps"]] == list(range(3, 25, 3))
+    from_windows = sum(entry["train_loss"] * 3 for entry in history["steps"])
+    from_epochs = sum(entry["train_loss"] * 8 for entry in history["epochs"])
+    assert abs(from_windows - from_epochs) < 1e-4
