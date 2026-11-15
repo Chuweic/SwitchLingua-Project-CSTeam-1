@@ -189,6 +189,31 @@ PYTHONPATH=. python examples/test_multitask_integration.py --punctuation-mode ne
 
 Since C improves the naive F1 and duration accuracy without lowering manual boundary F1, Person 3 should run the final A/C model comparison after the current A run finishes. All other seeds, row caps, splits, and hyperparameters should remain fixed.
 
+## Model Training and Comparison
+
+`src/train.py` fine-tunes the causal dual-head model and evaluates it with the same row caps, seed, validation-selected threshold, and result layout as the naive baseline, so the outputs are directly comparable.
+
+```bash
+# Backbone comparison under the current default policy (Approach A)
+PYTHONPATH=. python -m src.train --backbone xlmr  --punctuation-mode keep --cross-eval-mode neutral
+PYTHONPATH=. python -m src.train --backbone mbert --punctuation-mode keep
+
+# A/C model comparison: same seed, rows, and hyperparameters, only the policy changes
+PYTHONPATH=. python -m src.train --backbone xlmr --punctuation-mode neutral --cross-eval-mode keep
+```
+
+Each run writes `results/train_<backbone>_<mode>.json` with overall and per-pair test metrics, the universality σ, and the per-step and per-epoch history used for convergence plots. The best epoch and the switch threshold are selected on validation data; the test split is scored once. `--cross-eval-mode` also scores the trained model on test labels built with the other punctuation policy, because A and C use different valid-target sets and their own-label F1 values are not measured on the same positions.
+
+Hyperparameters are set with `--learning-rate`, `--epochs`, `--batch-size`, `--switch-weight`, `--duration-weight`, and `--max-length`; use `--output` to keep tuning runs apart.
+
+Build the comparison table and the convergence figure from all finished runs with:
+
+```bash
+PYTHONPATH=. python examples/compare_training_runs.py
+```
+
+This writes `results/training_comparison.csv` and `docs/figures/training_convergence.png`. mBERT records are built with the mBERT tokenizer, so its subword-based duration bins differ slightly from XLM-R's.
+
 ## LID Validation Audit
 
 The audit samples three validation utterances from each of the 14 language pairs. Manual gold labels were added for 849 pre-token rows and compared with the automatic weak labels.
@@ -214,7 +239,7 @@ PYTHONPATH=. pytest -q
 Expected result:
 
 ```text
-61 passed
+65 passed
 ```
 
 ## Limitations
