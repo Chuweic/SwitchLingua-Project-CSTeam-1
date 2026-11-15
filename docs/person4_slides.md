@@ -1,6 +1,6 @@
 # Person 4 Slides: Results, Universality, and Next Steps
 
-> These slide contents use the current three-epoch snapshot and are provisional until the eight-epoch neutral runs are available. Replace the numbers and figures by rerunning `PYTHONPATH=. python examples/run_person4_analysis.py`.
+> The slides separate the fair three-epoch A/C comparison from the eight-epoch C-only backbone comparison. Regenerate all outputs with `PYTHONPATH=. python examples/run_person4_analysis.py` after any new runs.
 
 ## Slide 1 — Model comparison
 
@@ -8,15 +8,29 @@
 
 - Same causal dual-head architecture, same 14 language pairs, same evaluation protocol.
 - Approach C (`neutral`) keeps punctuation as input but removes punctuation-induced switch targets.
-- Provisional best result: **mBERT + C, Anticipatory F1 = 0.608**.
+- Best three-epoch switch result: **mBERT + C, Anticipatory F1 = 0.6079**.
 - Naive C baseline: **0.488 F1**; model improvement: **+0.120**.
 - mBERT outperforms XLM-R under both punctuation policies.
 
 **Visual:** `docs/figures/person4_model_comparison.png`
 
-**Speaker note:** These are three-epoch results, so we treat them as an interim comparison rather than the final benchmark.
+**Speaker note:** We use the four three-epoch runs for the A/C decision, so the policy comparison does not mix different training lengths.
 
-## Slide 2 — Universality across 14 language pairs
+## Slide 2 — Backbone comparison after convergence
+
+**Title:** Longer Training Closes the Backbone Gap
+
+- Both eight-epoch runs use Approach C.
+- XLM-R: **F1 = 0.6018**, duration accuracy **0.6102**.
+- mBERT: **F1 = 0.6008**, duration accuracy **0.5806**.
+- The F1 difference is only **0.0011**: mBERT's earlier lead was mainly faster convergence.
+- mBERT has lower universality σ (**0.0677 vs. 0.0747**), but its duration head shows overfitting.
+
+**Visual:** `docs/figures/person4_backbone_8ep.png` and `docs/figures/person4_universality_8ep.png`
+
+**Speaker note:** More epochs do not automatically improve both tasks. The switch head and duration head peak at different times, so validation-based early stopping matters.
+
+## Slide 3 — Universality across 14 language pairs
 
 **Title:** Universality Is Strong but Not Uniform
 
@@ -26,18 +40,18 @@
 - Weakest pairs: **Malay–English 0.529** and **Cantonese–English 0.534**.
 - Distinct-script pairs are generally easier; same-script pairs require stronger LID and contextual cues.
 
-**Visual:** `docs/figures/person4_pair_f1.png` and `docs/figures/person4_universality.png`
+**Visual:** `docs/figures/person4_pair_f1.png`
 
 **Speaker note:** The language-pair spread shows why the overall average alone is not enough to support a universality claim.
 
-## Slide 3 — Conclusions and next steps
+## Slide 4 — Conclusions and next steps
 
 **Title:** Conclusions and Final-Stage Plan
 
-- Recommend Approach C provisionally: it is at least as good as A and avoids artificial punctuation switches.
-- mBERT is the strongest current backbone, but the final claim depends on the eight-epoch runs.
-- Weak LID quality and same-script ambiguity remain important error sources.
-- Next: replace the provisional inputs with the eight-epoch files, regenerate all tables/figures, and audit split overlap.
-- Next: expand manual LID validation, especially for Cantonese–English and other same-script pairs.
+- Use Approach C as the declared punctuation policy.
+- Use validation-selected early stopping rather than assuming eight epochs is optimal.
+- Repeat the C-only XLM-R/mBERT comparison with multiple random seeds.
+- Investigate duration-head overfitting and expand the same-script LID audit.
+- Report pair-level F1, duration accuracy, and universality σ together.
 
-**Speaker note:** We will not present the three-epoch numbers as final; the final report will use the regenerated outputs from the same analysis command.
+**Speaker note:** The final analysis separates the A/C policy decision from the converged backbone comparison.

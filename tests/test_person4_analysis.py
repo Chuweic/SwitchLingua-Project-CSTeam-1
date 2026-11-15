@@ -34,6 +34,26 @@ def test_discover_runs_prefers_eight_epoch_neutral_files(tmp_path):
     assert runs["XLM-R:C"]["status"] == "final"
 
 
+def test_discover_runs_can_force_fair_three_epoch_comparison(tmp_path):
+    _write_run(tmp_path / "train_xlmr_neutral.json", "xlm-roberta-base", "neutral", f1=0.51)
+    _write_run(tmp_path / "converge_xlmr_neutral_8ep.json", "xlm-roberta-base", "neutral", f1=0.61)
+
+    runs = discover_runs(tmp_path, prefer_convergence=False)
+
+    assert runs["XLM-R:C"]["path"].name == "train_xlmr_neutral.json"
+    assert runs["XLM-R:C"]["status"] == "provisional"
+
+
+def test_discover_runs_can_select_only_final_neutral_models(tmp_path):
+    _write_run(tmp_path / "converge_xlmr_neutral_8ep.json", "xlm-roberta-base", "neutral", f1=0.61)
+    _write_run(tmp_path / "converge_mbert_neutral_8ep.json", "bert-base-multilingual-cased", "neutral", f1=0.60)
+
+    runs = discover_runs(tmp_path, prefer_convergence=True, approaches={"C"})
+
+    assert set(runs) == {"XLM-R:C", "mBERT:C"}
+    assert all(item["status"] == "final" for item in runs.values())
+
+
 def test_discover_runs_marks_three_epoch_fallback_provisional(tmp_path):
     _write_run(tmp_path / "train_xlmr_neutral.json", "xlm-roberta-base", "neutral")
 

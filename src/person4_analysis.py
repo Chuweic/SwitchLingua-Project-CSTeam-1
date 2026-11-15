@@ -26,15 +26,23 @@ def _candidate_paths(results_dir: Path, short_name: str, mode: str) -> list[Path
     ]
 
 
-def _select_candidate(results_dir: Path, short_name: str, mode: str):
-    for status, path in (("final", _candidate_paths(results_dir, short_name, mode)[0]),
-                         ("provisional", _candidate_paths(results_dir, short_name, mode)[1])):
+def _select_candidate(results_dir: Path, short_name: str, mode: str, prefer_convergence: bool):
+    candidates = _candidate_paths(results_dir, short_name, mode)
+    if not prefer_convergence:
+        candidates = candidates[1:]
+    statuses = ("final", "provisional") if prefer_convergence else ("provisional",)
+    for status, path in zip(statuses, candidates):
         if path.exists():
             return path, status
     return None, None
 
 
-def discover_runs(results_dir: str | Path) -> dict[str, dict]:
+def discover_runs(
+    results_dir: str | Path,
+    *,
+    prefer_convergence: bool = True,
+    approaches: set[str] | None = None,
+) -> dict[str, dict]:
     """Find the preferred run for every backbone/punctuation-policy pair.
 
     Eight-epoch neutral runs are preferred when present. Existing three-epoch
@@ -45,7 +53,9 @@ def discover_runs(results_dir: str | Path) -> dict[str, dict]:
     selected = {}
     for backbone_label, (short_name, _) in BACKBONES.items():
         for approach, mode in MODES.items():
-            path, status = _select_candidate(results_dir, short_name, mode)
+            if approaches is not None and approach not in approaches:
+                continue
+            path, status = _select_candidate(results_dir, short_name, mode, prefer_convergence)
             if path is None:
                 continue
             selected[f"{backbone_label}:{approach}"] = {

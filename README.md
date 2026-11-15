@@ -242,7 +242,7 @@ Generate the Person 4 model comparison, pair-level universality analysis, CSV su
 PYTHONPATH=. python examples/run_person4_analysis.py
 ```
 
-The script prefers `converge_<backbone>_neutral_8ep.json` when available and otherwise falls back to the three-epoch `train_<backbone>_<mode>.json` files. It records the selected files and whether the output is provisional in `results/person4_analysis_metadata.json`. The report-ready text is in `docs/person4_report_section.md`, and the slide-ready content is in `docs/person4_slides.md`.
+The script generates two fair views: the four three-epoch files for A/C policy comparison, and the two eight-epoch neutral files for XLM-R/mBERT backbone comparison. It writes `results/person4_ac_comparison_3ep.csv`, `results/person4_backbone_comparison_8ep.csv`, pair-level tables, and separate figures for each view. The selected inputs are recorded in `results/person4_analysis_metadata.json`. The report-ready text is in `docs/person4_report_section.md`, and the slide-ready content is in `docs/person4_slides.md`.
 
 ## LID Validation Audit
 
@@ -269,7 +269,7 @@ PYTHONPATH=. pytest -q
 Expected result:
 
 ```text
-69 passed
+71 passed
 ```
 
 ## Limitations

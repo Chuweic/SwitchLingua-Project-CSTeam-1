@@ -106,24 +106,39 @@ def main():
 
     results_dir = Path(args.results_dir)
     output_dir = Path(args.output_dir)
-    runs = discover_runs(results_dir)
-    metadata = build_metadata(runs, results_dir)
-    model_summary = build_model_summary(runs, results_dir)
-    pair_metrics = build_pair_metrics(runs)
+    three_epoch_runs = discover_runs(results_dir, prefer_convergence=False)
+    final_neutral_runs = discover_runs(results_dir, prefer_convergence=True, approaches={"C"})
+    three_epoch_metadata = build_metadata(three_epoch_runs, results_dir)
+    final_neutral_metadata = build_metadata(final_neutral_runs, results_dir)
+    three_epoch_summary = build_model_summary(three_epoch_runs, results_dir)
+    final_neutral_summary = build_model_summary(final_neutral_runs, results_dir)
+    three_epoch_pairs = build_pair_metrics(three_epoch_runs)
+    final_neutral_pairs = build_pair_metrics(final_neutral_runs)
 
-    model_summary.to_csv(results_dir / "person4_model_summary.csv", index=False)
-    pair_metrics.to_csv(results_dir / "person4_pair_metrics.csv", index=False)
+    three_epoch_summary.to_csv(results_dir / "person4_model_summary.csv", index=False)
+    three_epoch_summary.to_csv(results_dir / "person4_ac_comparison_3ep.csv", index=False)
+    final_neutral_summary.to_csv(results_dir / "person4_backbone_comparison_8ep.csv", index=False)
+    three_epoch_pairs.to_csv(results_dir / "person4_pair_metrics.csv", index=False)
+    final_neutral_pairs.to_csv(results_dir / "person4_pair_metrics_8ep.csv", index=False)
     (results_dir / "person4_analysis_metadata.json").write_text(
-        json.dumps(metadata, indent=2), encoding="utf-8"
+        json.dumps({"three_epoch_ac_comparison": three_epoch_metadata,
+                    "eight_epoch_backbone_comparison": final_neutral_metadata}, indent=2),
+        encoding="utf-8",
     )
-    plot_model_comparison(model_summary, output_dir / "person4_model_comparison.png", metadata)
-    plot_pair_f1(pair_metrics, output_dir / "person4_pair_f1.png", metadata)
-    plot_universality(model_summary, output_dir / "person4_universality.png", metadata)
+    plot_model_comparison(three_epoch_summary, output_dir / "person4_model_comparison.png", three_epoch_metadata)
+    plot_model_comparison(final_neutral_summary, output_dir / "person4_backbone_8ep.png", final_neutral_metadata)
+    plot_pair_f1(three_epoch_pairs, output_dir / "person4_pair_f1.png", three_epoch_metadata)
+    plot_pair_f1(final_neutral_pairs, output_dir / "person4_pair_f1_8ep.png", final_neutral_metadata)
+    plot_universality(three_epoch_summary, output_dir / "person4_universality.png", three_epoch_metadata)
+    plot_universality(final_neutral_summary, output_dir / "person4_universality_8ep.png", final_neutral_metadata)
 
-    print(model_summary.to_string(index=False))
+    print("Three-epoch A/C comparison")
+    print(three_epoch_summary.to_string(index=False))
+    print("Eight-epoch C backbone comparison")
+    print(final_neutral_summary.to_string(index=False))
     print(f"saved {results_dir / 'person4_model_summary.csv'}")
     print(f"saved {results_dir / 'person4_pair_metrics.csv'}")
-    print(f"status: {metadata['result_status']}")
+    print(f"saved {results_dir / 'person4_backbone_comparison_8ep.csv'}")
 
 
 if __name__ == "__main__":
