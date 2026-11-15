@@ -1,0 +1,11 @@
+{
+  "result_status": "provisional",
+  "selected_files": {
+    "XLM-R:A": "train_xlmr_keep.json",
+    "XLM-R:C": "train_xlmr_neutral.json",
+    "mBERT:A": "train_mbert_keep.json",
+    "mBERT:C": "train_mbert_neutral.json"
+  },
+  "results_directory": "/Users/mesutyi/Desktop/SwitchLingua-Project-CSTeam-1/results",
+  "language_pair_count": 14
+}

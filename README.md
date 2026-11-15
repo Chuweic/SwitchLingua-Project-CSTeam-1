@@ -171,9 +171,9 @@ The machine-readable summary is stored in `results/punctuation_ablation_summary.
 PYTHONPATH=. python examples/plot_punctuation_ablation.py
 ```
 
-### Person 3 training handoff
+### Training handoff and policy recommendation
 
-Approach A remains the default while existing training continues. Person 3 can select the policy when constructing records:
+Approach C (`neutral`) is the provisional recommendation for the final model because it keeps punctuation as input while excluding punctuation-induced switch targets. Approach A remains available for controlled comparison. Both policies can be selected when constructing records:
 
 ```python
 records_from_parquet(..., punctuation_mode="keep")     # Approach A
@@ -187,7 +187,7 @@ PYTHONPATH=. python examples/test_multitask_integration.py --punctuation-mode ke
 PYTHONPATH=. python examples/test_multitask_integration.py --punctuation-mode neutral
 ```
 
-Since C improves the naive F1 and duration accuracy without lowering manual boundary F1, Person 3 should run the final A/C model comparison after the current A run finishes. All other seeds, row caps, splits, and hyperparameters should remain fixed.
+Since C is at least as good as A in the current cross-policy model comparison and improves the naive F1 and duration accuracy without lowering manual boundary F1, the final comparison should keep all seeds, row caps, splits, and hyperparameters fixed and use C as the primary policy.
 
 ## Model Training and Comparison
 
@@ -214,6 +214,16 @@ PYTHONPATH=. python examples/compare_training_runs.py
 
 This writes `results/training_comparison.csv` and `docs/figures/training_convergence.png`. mBERT records are built with the mBERT tokenizer, so its subword-based duration bins differ slightly from XLM-R's.
 
+### Person 4 final analysis
+
+Generate the Person 4 model comparison, pair-level universality analysis, CSV summaries, and report/slide figures with:
+
+```bash
+PYTHONPATH=. python examples/run_person4_analysis.py
+```
+
+The script prefers `converge_<backbone>_neutral_8ep.json` when available and otherwise falls back to the three-epoch `train_<backbone>_<mode>.json` files. It records the selected files and whether the output is provisional in `results/person4_analysis_metadata.json`. The report-ready text is in `docs/person4_report_section.md`, and the slide-ready content is in `docs/person4_slides.md`.
+
 ## LID Validation Audit
 
 The audit samples three validation utterances from each of the 14 language pairs. Manual gold labels were added for 849 pre-token rows and compared with the automatic weak labels.
@@ -239,7 +249,7 @@ PYTHONPATH=. pytest -q
 Expected result:
 
 ```text
-65 passed
+68 passed
 ```
 
 ## Limitations
@@ -262,5 +272,5 @@ The current metrics are initial engineering results and should not be presented 
 2. Expand the manual LID audit beyond three utterances per pair.
 3. Validate Cantonese–English and Chinese–English segmentation and the use of subword-based duration labels.
 4. Audit and remove exact utterance overlap across data splits.
-5. Compare Approach A (`keep`) and Approach C (`neutral`) with fixed seeds and hyperparameters, then declare one punctuation policy for the final mBERT and XLM-R comparison.
-6. Train the causal dual-head model and compare pair-level Anticipatory F1 and duration convergence.
+5. Replace the provisional three-epoch results with the eight-epoch neutral runs and regenerate the Person 4 outputs.
+6. Declare Approach C or A only after the final fixed-seed comparison, then report pair-level Anticipatory F1, duration accuracy, and universality σ together.
