@@ -257,6 +257,37 @@ The audit samples three validation utterances from each of the 14 language pairs
 
 The token-level accuracy is high, but the lower boundary F1 shows that individual LID errors can create or remove switch boundaries. Same-script pairs and romanized Hindi remain the main failure modes. The completed annotations and detailed per-pair metrics are stored in `results/lid_audit_14pairs.csv` and `results/lid_audit_14pairs_metrics.json`.
 
+### Expanded French–English audit
+
+Because the initial French–English result was based on only three utterances, a targeted follow-up audit uses 20 validation utterances sampled with seed 42. All 364 lexical tokens were assigned manual `fr` or `en` labels; punctuation remains excluded from the audit.
+
+| French–English audit metric | 3-utterance audit | Expanded 20-utterance audit |
+|---|---:|---:|
+| Audited lexical tokens | 64 | 364 |
+| Token LID accuracy | 0.9219 | **0.9176** |
+| Switch-boundary F1 | 0.2857 | **0.4898** |
+| Switch-boundary precision | 0.1818 | 0.3333 |
+| Switch-boundary recall | 0.6667 | **0.9231** |
+
+The larger sample confirms that automatic token LIDs are usually correct, while same-script homographs, borrowings, and names create extra predicted boundaries. French–English is retained in the 14-pair evaluation because token accuracy remains above 0.90 and boundary recall is high; its lower boundary precision is reported as a limitation rather than hidden by removing the pair.
+
+Recreate the blank 20-utterance template and score the completed annotations with:
+
+```bash
+PYTHONPATH=. python -m src.lid_audit prepare \
+  --data data/processed/validation.parquet \
+  --pairs French-English \
+  --utterances-per-pair 20 \
+  --seed 42 \
+  --output results/lid_audit_french_english_20.csv
+
+PYTHONPATH=. python -m src.lid_audit score \
+  --audit results/lid_audit_french_english_20.csv \
+  --output results/lid_audit_french_english_20_metrics.json
+```
+
+The completed annotations and metrics are stored in `results/lid_audit_french_english_20.csv` and `results/lid_audit_french_english_20_metrics.json`.
+
 ## Setup and Tests
 
 ```bash
@@ -289,7 +320,7 @@ The current metrics are initial engineering results and should not be presented 
 ## Next Steps
 
 1. Improve same-script LID handling for short words, names, borrowings, and romanized text.
-2. Expand the manual LID audit beyond three utterances per pair.
+2. Expand the manual LID audit beyond three utterances for the remaining language pairs; French–English now has a completed 20-utterance follow-up audit.
 3. Validate Cantonese–English and Chinese–English segmentation and the use of subword-based duration labels.
 4. Audit and remove exact utterance overlap across data splits.
 5. Regenerate the Person 4 outputs from the eight-epoch neutral runs now stored in `results/`.

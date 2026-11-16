@@ -1,0 +1,26 @@
+{
+  "overall": {
+    "token_count": 364,
+    "token_correct": 334,
+    "token_lid_accuracy": 0.9175824175824175,
+    "switch_boundary_f1": 0.489795918367347,
+    "switch_boundary_precision": 0.3333333333333333,
+    "switch_boundary_recall": 0.9230769230769231,
+    "switch_boundary_tp": 24,
+    "switch_boundary_fp": 48,
+    "switch_boundary_fn": 2
+  },
+  "by_language_pair": {
+    "French-English": {
+      "token_count": 364,
+      "token_correct": 334,
+      "token_lid_accuracy": 0.9175824175824175,
+      "switch_boundary_f1": 0.489795918367347,
+      "switch_boundary_precision": 0.3333333333333333,
+      "switch_boundary_recall": 0.9230769230769231,
+      "switch_boundary_tp": 24,
+      "switch_boundary_fp": 48,
+      "switch_boundary_fn": 2
+    }
+  }
+}
