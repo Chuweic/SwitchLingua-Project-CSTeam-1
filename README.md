@@ -234,9 +234,17 @@ All runs use the 14 pairs, the baseline row caps (500 / 150 / 150 rows per pair)
 **Backbone and convergence.** After 3 epochs mBERT leads XLM-R by about 0.04 F1, but the 8-epoch runs show this is a difference in convergence speed: mBERT's validation F1 plateaus at epoch 3, while XLM-R keeps improving until epoch 7 and reaches the same test F1 (0.6018 vs 0.6008). Both backbones level off near 0.60. Validation loss rises after epoch 2–3 for both, driven by the duration head (mBERT's validation duration loss grows from 0.83 to 1.69 by epoch 8), so the best epoch for switch F1 is later than the best epoch for duration. mBERT trains faster (about 3 minutes per epoch on a T4 versus 4) and has the lower pair-level spread.
 
 Each configuration was run with one seed, so differences below roughly 0.01 F1 should not be read as rankings. mBERT and XLM-R are scored on their own subword positions (97,282 and 100,626 test targets under Approach C), and the naive baseline rows use the XLM-R tokenizer. Per-epoch curves are in `results/convergence_curves.csv`, with figures in `docs/figures/training_convergence.png` (3 epochs) and `docs/figures/training_convergence_8ep.png` (8 epochs).
-### Person 4 final analysis
 
-Generate the Person 4 model comparison, pair-level universality analysis, CSV summaries, and report/slide figures with:
+### Multitask Loss-Weight Ablation
+
+We tested duration-loss weights {1.0, 0.5, 0.3, 0.2, 0.125} with switch weight fixed at 1.0. Using XLM-R, Approach C, eight epochs, and seed 42, **0.2 achieved the highest validation switch F1 (0.6299)** while improving duration accuracy to 61.73%.&#x20;
+
+[Executed notebook](notebooks/loss_weight_ablation_colab.ipynb) | [Full results](results/loss_weight_ablation_colab_fp32/validation_summary.md)
+
+
+### final analysis
+
+Generate the model comparison, pair-level universality analysis, CSV summaries, and report/slide figures with:
 
 ```bash
 PYTHONPATH=. python examples/run_person4_analysis.py
