@@ -1,0 +1,265 @@
+{
+  "overall": {
+    "anticipatory_f1": 0.6317575209228682,
+    "precision": 0.6372347707049966,
+    "recall": 0.6263736263736264,
+    "accuracy": 0.9352851151789796,
+    "support": 100626,
+    "positive_support": 8918,
+    "duration_accuracy": 0.6249159004261045,
+    "duration_support": 8918,
+    "switch_rate": 0.08862520620913084
+  },
+  "by_language_pair": {
+    "Arabic-English": {
+      "anticipatory_f1": 0.6755674232309746,
+      "precision": 0.6988950276243094,
+      "recall": 0.6537467700258398,
+      "accuracy": 0.9558342420937841,
+      "support": 5502,
+      "positive_support": 387,
+      "duration_accuracy": 0.5839793281653747,
+      "duration_support": 387,
+      "switch_rate": 0.0703380588876772
+    },
+    "Cantonese-English": {
+      "anticipatory_f1": 0.5491071428571428,
+      "precision": 0.5347826086956522,
+      "recall": 0.5642201834862385,
+      "accuracy": 0.9543605964753727,
+      "support": 8852,
+      "positive_support": 436,
+      "duration_accuracy": 0.6077981651376146,
+      "duration_support": 436,
+      "switch_rate": 0.04925440578400361
+    },
+    "Chinese-English": {
+      "anticipatory_f1": 0.7177522349936144,
+      "precision": 0.7095959595959596,
+      "recall": 0.7260981912144703,
+      "accuracy": 0.9752491880389741,
+      "support": 8929,
+      "positive_support": 387,
+      "duration_accuracy": 0.6950904392764858,
+      "duration_support": 387,
+      "switch_rate": 0.04334191958785978
+    },
+    "French-English": {
+      "anticipatory_f1": 0.5846354166666667,
+      "precision": 0.627972027972028,
+      "recall": 0.5468940316686967,
+      "accuracy": 0.8959726072069134,
+      "support": 6133,
+      "positive_support": 821,
+      "duration_accuracy": 0.610231425091352,
+      "duration_support": 821,
+      "switch_rate": 0.1338659709766835
+    },
+    "German-English": {
+      "anticipatory_f1": 0.5962473940236276,
+      "precision": 0.623546511627907,
+      "recall": 0.5712383488681758,
+      "accuracy": 0.8867004680187207,
+      "support": 5128,
+      "positive_support": 751,
+      "duration_accuracy": 0.6364846870838882,
+      "duration_support": 751,
+      "switch_rate": 0.14645085803432137
+    },
+    "Hindi-English": {
+      "anticipatory_f1": 0.6290322580645161,
+      "precision": 0.5963302752293578,
+      "recall": 0.6655290102389079,
+      "accuracy": 0.9630225080385852,
+      "support": 6220,
+      "positive_support": 293,
+      "duration_accuracy": 0.6484641638225256,
+      "duration_support": 293,
+      "switch_rate": 0.047106109324758845
+    },
+    "Italian-English": {
+      "anticipatory_f1": 0.6173264486517498,
+      "precision": 0.6674937965260546,
+      "recall": 0.5741728922091782,
+      "accuracy": 0.8812321937321937,
+      "support": 5616,
+      "positive_support": 937,
+      "duration_accuracy": 0.6435432230522946,
+      "duration_support": 937,
+      "switch_rate": 0.16684472934472935
+    },
+    "Japanese-English": {
+      "anticipatory_f1": 0.7727272727272727,
+      "precision": 0.7708830548926014,
+      "recall": 0.7745803357314148,
+      "accuracy": 0.9895724713242962,
+      "support": 18221,
+      "positive_support": 417,
+      "duration_accuracy": 0.8800959232613909,
+      "duration_support": 417,
+      "switch_rate": 0.022885681356676364
+    },
+    "Korean-English": {
+      "anticipatory_f1": 0.7906432748538013,
+      "precision": 0.7824074074074074,
+      "recall": 0.7990543735224587,
+      "accuracy": 0.972854109796785,
+      "support": 6594,
+      "positive_support": 423,
+      "duration_accuracy": 0.7186761229314421,
+      "duration_support": 423,
+      "switch_rate": 0.06414922656960874
+    },
+    "Malay-English": {
+      "anticipatory_f1": 0.5602027883396704,
+      "precision": 0.5594936708860759,
+      "recall": 0.5609137055837563,
+      "accuracy": 0.8665384615384616,
+      "support": 5200,
+      "positive_support": 788,
+      "duration_accuracy": 0.5456852791878173,
+      "duration_support": 788,
+      "switch_rate": 0.15153846153846154
+    },
+    "Philippines-English": {
+      "anticipatory_f1": 0.6165895336418654,
+      "precision": 0.5735099337748344,
+      "recall": 0.6666666666666666,
+      "accuracy": 0.8244784876140808,
+      "support": 6136,
+      "positive_support": 1299,
+      "duration_accuracy": 0.581986143187067,
+      "duration_support": 1299,
+      "switch_rate": 0.21170143415906129
+    },
+    "Russian-English": {
+      "anticipatory_f1": 0.6638772663877267,
+      "precision": 0.6761363636363636,
+      "recall": 0.6520547945205479,
+      "accuracy": 0.9568795848989086,
+      "support": 5589,
+      "positive_support": 365,
+      "duration_accuracy": 0.6383561643835617,
+      "duration_support": 365,
+      "switch_rate": 0.06530685274646628
+    },
+    "Spanish-English": {
+      "anticipatory_f1": 0.629932985852569,
+      "precision": 0.7014925373134329,
+      "recall": 0.5716216216216217,
+      "accuracy": 0.9124691792884818,
+      "support": 5678,
+      "positive_support": 740,
+      "duration_accuracy": 0.6148648648648649,
+      "duration_support": 740,
+      "switch_rate": 0.13032758013384996
+    },
+    "Vietnamese-English": {
+      "anticipatory_f1": 0.6348314606741573,
+      "precision": 0.6236203090507726,
+      "recall": 0.6464530892448512,
+      "accuracy": 0.9048037492677211,
+      "support": 6828,
+      "positive_support": 874,
+      "duration_accuracy": 0.5675057208237986,
+      "duration_support": 874,
+      "switch_rate": 0.1280023432923257
+    }
+  },
+  "universality_std": 0.07003558671601448,
+  "threshold": 0.35,
+  "losses": {
+    "loss": 0.3471436339438471,
+    "switch_loss": 0.1845094604879363,
+    "duration_loss": 0.8131708518052713
+  },
+  "selected_candidate": {
+    "name": "duration_0p2",
+    "switch_weight": 1.0,
+    "duration_weight": 0.2,
+    "best_epoch": 5,
+    "threshold": 0.35,
+    "validation_f1": 0.6298751519169152,
+    "validation_duration_accuracy": 0.6173347778981582,
+    "checkpoint_filename": "duration_0p2.pt",
+    "train_minutes": 32.16,
+    "gpu": "Tesla T4",
+    "passes_duration_guard": true
+  },
+  "experiment_config": {
+    "date_utc": "2026-11-16T23:00:39.658588+00:00",
+    "runner": "notebooks/loss_weight_ablation_colab.ipynb",
+    "code_commit": "25536acaf653c2eaa5960c73616884687ada78c0",
+    "python": "3.13.16",
+    "pytorch": "2.14.1+cu130",
+    "transformers": "4.57.6",
+    "cuda": "13.0",
+    "gpu": "Tesla T4",
+    "device": "cuda",
+    "precision": "fp32",
+    "data_dir": "data/processed",
+    "model": "xlm-roberta-base",
+    "punctuation_mode": "neutral",
+    "seed": 42,
+    "epochs": 8,
+    "learning_rate": 5e-05,
+    "batch_size": 32,
+    "max_length": 128,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "gradient_clip": 1.0,
+    "dropout": 0.1,
+    "switch_weight": 1.0,
+    "rows_per_pair": {
+      "train": 500,
+      "validation": 150,
+      "test": 150
+    },
+    "utterances_per_row": 2,
+    "language_pairs": [
+      "Arabic-English",
+      "Cantonese-English",
+      "Chinese-English",
+      "French-English",
+      "German-English",
+      "Hindi-English",
+      "Italian-English",
+      "Japanese-English",
+      "Korean-English",
+      "Malay-English",
+      "Philippines-English",
+      "Russian-English",
+      "Spanish-English",
+      "Vietnamese-English"
+    ],
+    "source_sha256": {
+      "src/train.py": "bf6217eaa7839bb8c1216d5190cd3df5cd502fe2f565d9028f1aec3172c3b864",
+      "src/multitask_model.py": "219c8fbdf8538c91eb54d73dd6532a78913162b041c75abcb53481a90e7de0aa",
+      "src/streaming_dataloader.py": "27404b3b29259de496102a9d9ffa2950570817195eed2d5af0666d66fe6d7c69",
+      "src/switchlingua_labels.py": "f6bc097434d5210745908275520cac76609fe45fd198faef3375044c7911bab7"
+    },
+    "dataset_sha256": {
+      "train": "51f50db2ebd48fae5fc30a0f7212fb7118c5255e317a2ef1bbe66318999991a4",
+      "validation": "0b89560665339b1b1b949e75ded89e09394d74424c181697b4d822ce8e9ca073"
+    },
+    "weight_candidates": [
+      1.0,
+      0.5,
+      0.3,
+      0.2,
+      0.125
+    ],
+    "max_duration_drop_pp": 1.0,
+    "output_dir": "/content/SwitchLingua-Project-CSTeam-1/results/loss_weight_ablation_colab_fp32",
+    "checkpoint_dir": "/content/SwitchLingua-Project-CSTeam-1/checkpoints/loss_weight_ablation_colab_fp32",
+    "selection_rule": "Maximize validation anticipatory F1 at each run's best validation-selected epoch subject to duration accuracy >= equal-weight baseline minus 1 percentage points; break ties by validation duration accuracy. Test is held out until selection.",
+    "record_counts": {
+      "train": 12267,
+      "validation": 3728
+    }
+  },
+  "test_sha256": "a0e823191a6a2d54291d9bbe31f13ca52657f2a2f1561c10727763e2f3574ccb",
+  "test_record_count": 3727,
+  "test_gpu": "Tesla T4",
+  "test_selection_policy": "One test evaluation after candidate selection from validation only."
+}

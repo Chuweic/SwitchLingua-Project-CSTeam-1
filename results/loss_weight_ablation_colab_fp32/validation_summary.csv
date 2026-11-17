@@ -1,0 +1,6 @@
+name,switch_weight,duration_weight,best_epoch,threshold,validation_f1,validation_duration_accuracy,passes_duration_guard,train_minutes,gpu
+duration_1p0,1.0,1.0,8,0.38,0.5967358041482489,0.5996749729144095,True,32.1,Tesla T4
+duration_0p5,1.0,0.5,6,0.4,0.6191384339241642,0.6069339111592633,True,32.24,Tesla T4
+duration_0p3,1.0,0.3,6,0.42,0.6289861698479826,0.6026002166847237,True,32.16,Tesla T4
+duration_0p2,1.0,0.2,5,0.35,0.6298751519169152,0.6173347778981582,True,32.16,Tesla T4
+duration_0p125,1.0,0.125,5,0.41,0.6297671279109012,0.6171180931744312,True,32.21,Tesla T4
